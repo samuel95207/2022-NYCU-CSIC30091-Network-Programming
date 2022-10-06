@@ -51,10 +51,13 @@ cleanobj :
 run:
 	@$(TARGET)
 
-commands: noop number removetag removetag0 ls cat
+commands: create_working_dir noop number removetag removetag0 ls cat
 
 clean_command:
 	rm working_dir/bin/*
+
+create_working_dir:
+	mkdir -p working_dir/bin
 
 noop:
 	g++ src/commands/noop.cpp -o working_dir/bin/noop
