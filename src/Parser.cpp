@@ -44,9 +44,6 @@ ParseResult Parser::parse(string commandStr) {
         parseResult.commands.push_back(pair<string, vector<string>>(command, args));
     }
 
-    if (parseResult.commands.size() != 0 && parseResult.operators.size() != parseResult.commands.size() - 1) {
-        parseResult.errorMessage = "Error! Commands and operators count mismatch.";
-    }
 
     if (parseResult.errorMessage != "") {
         parseResult.commands.clear();
@@ -81,7 +78,7 @@ void Parser::printParseResult(const ParseResult& parseResult) {
         }
         cout << endl << endl;
 
-        if (i != int(parseResult.commands.size()) - 1) {
+        if (i < int(parseResult.operators.size())) {
             cout << "Operator: " << parseResult.operators[i] << endl << endl;
         }
     }
