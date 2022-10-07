@@ -17,8 +17,8 @@ class BuildinCommand {
     static bool execute(NPShell& shell, const std::string& command, const std::vector<std::string>& args);
 
    private:
-    static bool exit(NPShell& shell, const std::string& command, const std::vector<std::string>& args);
-    static bool printenv(NPShell& shell, const std::string& command, const std::vector<std::string>& args);
-    static bool setenv(NPShell& shell, const std::string& command, const std::vector<std::string>& args);
+    static bool exitCommand(NPShell& shell, const std::string& command, const std::vector<std::string>& args);
+    static bool printenvCommand(NPShell& shell, const std::string& command, const std::vector<std::string>& args);
+    static bool setenvCommand(NPShell& shell, const std::string& command, const std::vector<std::string>& args);
 
 };

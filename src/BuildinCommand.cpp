@@ -3,14 +3,15 @@
 #include "BuildinCommand.h"
 #endif
 
-#include <iostream>
 #include <cstdlib>
+#include <iostream>
 
 using namespace std;
 
 
-unordered_map<string, BuildinCommandFunction> BuildinCommand::commands = {
-    {"exit", BuildinCommand::exit}, {"printenv", BuildinCommand::printenv}, {"setenv", BuildinCommand::setenv}};
+unordered_map<string, BuildinCommandFunction> BuildinCommand::commands = {{"exit", BuildinCommand::exitCommand},
+                                                                          {"printenv", BuildinCommand::printenvCommand},
+                                                                          {"setenv", BuildinCommand::setenvCommand}};
 
 
 bool BuildinCommand::isBuildinCommand(string command) { return commands.find(command) != commands.end(); }
@@ -25,12 +26,12 @@ bool BuildinCommand::execute(NPShell& shell, const string& command, const vector
 }
 
 
-bool BuildinCommand::exit(NPShell& shell, const string& command, const vector<string>& args) {
+bool BuildinCommand::exitCommand(NPShell& shell, const string& command, const vector<string>& args) {
     shell.setExit();
     return true;
 }
 
-bool BuildinCommand::printenv(NPShell& shell, const string& command, const vector<string>& args) {
+bool BuildinCommand::printenvCommand(NPShell& shell, const string& command, const vector<string>& args) {
     if (args.size() < 1) {
         return false;
     }
@@ -42,7 +43,13 @@ bool BuildinCommand::printenv(NPShell& shell, const string& command, const vecto
     return true;
 }
 
-bool BuildinCommand::setenv(NPShell& shell, const string& command, const vector<string>& args) {
-    // TODO
-    return true;
+bool BuildinCommand::setenvCommand(NPShell& shell, const string& command, const vector<string>& args) {
+    string value = "";
+    if (args.size() < 1) {
+        return false;
+    } else if (args.size() >= 2) {
+        value = args[1];
+    }
+
+    return !setenv(args[0].c_str(), value.c_str(), 1);
 }
