@@ -10,7 +10,7 @@
 
 using namespace std;
 
-const vector<string> Parser::operatorTypes = {"\\|", "\\|[1-9][0-9]*", ">"};
+const vector<string> Parser::operatorTypes = {"\\|", "\\|[1-9][0-9]*", "\\![1-9][0-9]*", ">"};
 
 
 ParseResult Parser::parse(string commandStr) {
