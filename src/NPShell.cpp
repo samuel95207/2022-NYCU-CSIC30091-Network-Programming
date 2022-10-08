@@ -56,6 +56,7 @@ void NPShell::run() {
             if (nextOperator == "|") {
                 // To next normal pipe
                 executeForkedCommand(command, args);
+
             } else if (nextOperator == ">") {
                 // Direct to file
                 if (i + 1 >= int(parseResult.commands.size())) {
@@ -64,6 +65,7 @@ void NPShell::run() {
                 string filename = parseResult.commands[i + 1].first;
                 executeForkedCommand(command, args, nullptr, true, filename);
                 break;
+
             } else if (nextOperator[0] == '|') {
                 // To numbered pipe
                 int count;
@@ -75,6 +77,7 @@ void NPShell::run() {
                 if (i + 1 > int(parseResult.commands.size())) {
                     pipeManager.reduceNumberedPipesCount();
                 }
+
             } else if (nextOperator[0] == '!') {
                 // To STDERR numbered pipe
                 int count;
@@ -86,6 +89,7 @@ void NPShell::run() {
                 if (i + 1 > int(parseResult.commands.size())) {
                     pipeManager.reduceNumberedPipesCount();
                 }
+
             } else {
                 // Last command
                 // cout << "last command" <<endl;
@@ -117,7 +121,7 @@ bool NPShell::executeForkedCommand(const std::string &command, const std::vector
         // Parent Process
         pipeManager.parentPipeHandler(numberedPipe, pipeEnd, outFilename);
 
-        if (pipeEnd) {
+        if (pipeEnd || numberedPipe != nullptr) {
             int status;
             waitpid(pid, &status, 0);
         }
