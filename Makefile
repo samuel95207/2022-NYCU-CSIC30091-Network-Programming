@@ -52,6 +52,19 @@ test:
 	@make
 	@cp $(TARGET) working_dir/
 
+zip:
+	@make clean
+	@rm -f 311511034.zip
+	@rm -rf 311511034
+	@mkdir 311511034
+	@mkdir 311511034/src
+	@cp src/*.cpp 311511034/src
+	@cp src/*.h 311511034/src
+	@cp Makefile 311511034
+	@zip -r 311511034.zip 311511034
+	@rm -rf 311511034
+
+
 commands: create_working_dir noop number removetag removetag0 ls cat
 
 clean_command:
