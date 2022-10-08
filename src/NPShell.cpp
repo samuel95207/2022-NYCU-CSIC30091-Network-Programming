@@ -47,6 +47,8 @@ void NPShell::run() {
             auto nextOperator = (i != int(parseResult.operators.size()) ? parseResult.operators[i] : "");
 
 
+            pipeManager.reduceNumberedPipesCount();
+
             // Filter buildin commands
             if (BuildinCommand::isBuildinCommand(command)) {
                 BuildinCommand::execute(*this, command, args);
@@ -54,17 +56,47 @@ void NPShell::run() {
             }
 
             if (nextOperator == "|") {
+                // To next normal pipe
                 executeForkedCommand(command, args);
+                
             } else if (nextOperator == ">") {
+                // Direct to file
                 if (i + 1 >= int(parseResult.commands.size())) {
                     cerr << "Error! Filename cannot be empty." << endl;
                 }
                 string filename = parseResult.commands[i + 1].first;
                 executeForkedCommand(command, args, true, filename);
                 break;
+
             } else if (nextOperator[0] == '|') {
+                // To numbered pipe
+                int count;
+                sscanf(nextOperator.c_str(), "|%d", &count);
+
+                executeForkedCommand(command, args);
+                pipeManager.addNumberedPipe(count, false);
+
+                if (i + 1 != int(parseResult.commands.size())) {
+                    pipeManager.reduceNumberedPipesCount();
+                }
+
+
             } else if (nextOperator[0] == '!') {
+                // To STDERR numbered pipe
+                int count;
+                sscanf(nextOperator.c_str(), "!%d", &count);
+
+                executeForkedCommand(command, args);
+                pipeManager.addNumberedPipe(count, true);
+
+                if (i + 1 != int(parseResult.commands.size())) {
+                    pipeManager.reduceNumberedPipesCount();
+                }
+                
+
             } else {
+                // Last command
+                // cout << "last command" <<endl;
                 executeForkedCommand(command, args, true);
             }
         }
@@ -77,7 +109,8 @@ void NPShell::run() {
 
 bool NPShell::executeForkedCommand(const std::string& command, const std::vector<std::string>& args, bool pipeEnd,
                                    std::string outFilename) {
-    bool pipeStatus = pipeManager.rootPipeHandler();
+
+    bool pipeStatus = pipeManager.rootPipeHandler(pipeEnd, outFilename);
 
     if (!pipeStatus) {
         cerr << "Pipe error!" << endl;
