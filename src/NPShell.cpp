@@ -24,123 +24,139 @@
 #include "Util.h"
 #endif
 
-
 using namespace std;
 
-NPShell::NPShell() {
+NPShell::NPShell()
+{
     signal(SIGCHLD, NPShell::childSignalHandler);
     BuildinCommand::execute(*this, "setenv", {vector<string>({"PATH", "bin:."})});
 }
 
-void NPShell::run() {
+void NPShell::run()
+{
     string commandRaw;
-    while (cout << symbol && getline(cin, commandRaw)) {
+    while (cout << symbol && getline(cin, commandRaw))
+    {
         auto parseResult = Parser::parse(commandRaw);
         // Parser::printParseResult(parseResult);
 
         pipeManager.newSession();
 
-        for (int i = 0; i < int(parseResult.commands.size()); i++) {
+        for (int i = 0; i < int(parseResult.commands.size()); i++)
+        {
             auto command = parseResult.commands[i].first;
             auto args = parseResult.commands[i].second;
             auto prevOperator = (i != 0 ? parseResult.operators[i - 1] : "");
             auto nextOperator = (i != int(parseResult.operators.size()) ? parseResult.operators[i] : "");
 
-
             pipeManager.reduceNumberedPipesCount();
 
             // Filter buildin commands
-            if (BuildinCommand::isBuildinCommand(command)) {
+            if (BuildinCommand::isBuildinCommand(command))
+            {
                 BuildinCommand::execute(*this, command, args);
                 continue;
             }
 
-            if (nextOperator == "|") {
+            if (nextOperator == "|")
+            {
                 // To next normal pipe
                 executeForkedCommand(command, args);
-                
-            } else if (nextOperator == ">") {
+            }
+            else if (nextOperator == ">")
+            {
                 // Direct to file
-                if (i + 1 >= int(parseResult.commands.size())) {
+                if (i + 1 >= int(parseResult.commands.size()))
+                {
                     cerr << "Error! Filename cannot be empty." << endl;
                 }
                 string filename = parseResult.commands[i + 1].first;
-                executeForkedCommand(command, args, true, filename);
+                executeForkedCommand(command, args, nullptr, true, filename);
                 break;
-
-            } else if (nextOperator[0] == '|') {
+            }
+            else if (nextOperator[0] == '|')
+            {
                 // To numbered pipe
                 int count;
                 sscanf(nextOperator.c_str(), "|%d", &count);
 
-                executeForkedCommand(command, args);
-                pipeManager.addNumberedPipe(count, false);
+                auto numberedPipe = pipeManager.addNumberedPipe(count, false);
+                executeForkedCommand(command, args, &numberedPipe);
 
-                if (i + 1 != int(parseResult.commands.size())) {
+                if (i + 1 != int(parseResult.commands.size()))
+                {
                     pipeManager.reduceNumberedPipesCount();
                 }
-
-
-            } else if (nextOperator[0] == '!') {
+            }
+            else if (nextOperator[0] == '!')
+            {
                 // To STDERR numbered pipe
                 int count;
                 sscanf(nextOperator.c_str(), "!%d", &count);
 
-                executeForkedCommand(command, args);
-                pipeManager.addNumberedPipe(count, true);
+                auto numberedPipe = pipeManager.addNumberedPipe(count, true);
+                executeForkedCommand(command, args, &numberedPipe);
 
-                if (i + 1 != int(parseResult.commands.size())) {
+                if (i + 1 != int(parseResult.commands.size()))
+                {
                     pipeManager.reduceNumberedPipesCount();
                 }
-                
-
-            } else {
+            }
+            else
+            {
                 // Last command
                 // cout << "last command" <<endl;
-                executeForkedCommand(command, args, true);
+                executeForkedCommand(command, args, nullptr, true);
             }
         }
 
-        if (exitFlag) {
+        if (exitFlag)
+        {
             break;
         }
     }
 }
 
-bool NPShell::executeForkedCommand(const std::string& command, const std::vector<std::string>& args, bool pipeEnd,
-                                   std::string outFilename) {
+bool NPShell::executeForkedCommand(const std::string &command, const std::vector<std::string> &args, NumberedPipe *numberedPipe, bool pipeEnd,
+                                   std::string outFilename)
+{
 
-    bool pipeStatus = pipeManager.rootPipeHandler(pipeEnd, outFilename);
+    bool pipeStatus = pipeManager.rootPipeHandler(numberedPipe, pipeEnd, outFilename);
 
-    if (!pipeStatus) {
+    if (!pipeStatus)
+    {
         cerr << "Pipe error!" << endl;
         return false;
     }
 
-
     pid_t pid = fork();
 
-    if (pid == -1) {
+    if (pid == -1)
+    {
         cerr << "Fork error!" << endl;
         return false;
-
-    } else if (pid > 0) {
+    }
+    else if (pid > 0)
+    {
         // Parent Process
-        pipeManager.parentPipeHandler(pipeEnd, outFilename);
+        pipeManager.parentPipeHandler(numberedPipe, pipeEnd, outFilename);
 
-        if (pipeEnd) {
+        if (pipeEnd)
+        {
             int status;
             waitpid(pid, &status, 0);
         }
-
-    } else {
+    }
+    else
+    {
         // Children Process
-        pipeManager.childPipeHandler(pipeEnd, outFilename);
+        pipeManager.childPipeHandler(numberedPipe, pipeEnd, outFilename);
 
-        execvp(command.c_str(), (char**)Util::createArgv(command, args));
+        execvp(command.c_str(), (char **)Util::createArgv(command, args));
 
         // cerr << "errno = " << errno << endl;
-        if (errno == 13 || errno == 2) {
+        if (errno == 13 || errno == 2)
+        {
             cerr << "Unknown command: [" << command << "]." << endl;
         }
         exit(0);
@@ -149,11 +165,10 @@ bool NPShell::executeForkedCommand(const std::string& command, const std::vector
     return true;
 }
 
-
 void NPShell::setExit() { exitFlag = true; }
 
-
-void NPShell::childSignalHandler(int signum) {
+void NPShell::childSignalHandler(int signum)
+{
     int status;
     wait(&status);
 }

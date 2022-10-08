@@ -16,94 +16,72 @@
 using namespace std;
 
 PipeManager::PipeManager() {
-    pair<int, int> currentPipe(0, 0);
-    currentPipes.push_back(currentPipe);
+    currentPipe[READ] = 0;
+    currentPipe[WRITE] = 0;
 }
 
 bool PipeManager::newSession() {
-    currentPipes.clear();
-
-    pair<int, int> currentPipe(0, 0);
-    currentPipes.push_back(currentPipe);
+    currentPipe[READ] = 0;
+    currentPipe[WRITE] = 0;
 
     return true;
 }
 
-
-bool PipeManager::rootPipeHandler(bool pipeEnd, std::string outFilename) {
-    bool clearCurrentPipesFlag = true;
-    for (int i = 0; i < int(numberedPipes.size()); i++) {
-        if (numberedPipes[i].count == 0) {
-            // cerr << "numberedPipes " << i << " = 0" << endl;
-            // cerr << numberedPipes[i].pipe[READ] << " " << numberedPipes[i].pipe[WRITE] << endl;
-
-            if (clearCurrentPipesFlag) {
-                currentPipes.clear();
-                clearCurrentPipesFlag = false;
+bool PipeManager::rootPipeHandler(NumberedPipe *numberedPipe, bool pipeEnd, std::string outFilename) {
+    if (!pipeEnd) {
+        if (numberedPipe != nullptr) {
+            // cerr << "Add numberedPipe " << numberedPipe->pipe[READ] << " " << numberedPipe->pipe[WRITE] << endl;
+            newPipe[READ] = numberedPipe->pipe[READ];
+            newPipe[WRITE] = numberedPipe->pipe[WRITE];
+        } else {
+            if (pipe(newPipe)) {
+                return false;
             }
-
-            pair<int, int> currentPipe(numberedPipes[i].pipe[READ], numberedPipes[i].pipe[WRITE]);
-            currentPipes.push_back(currentPipe);
         }
     }
 
-    // cerr << "currentPipes size = " << currentPipes.size() << endl;
-    // for (auto currentPipe : currentPipes) {
-        // cerr << currentPipe.first << " " << currentPipe.second << endl;
-    // }
+    int *currentNumberedPipe = getCurrentNumberedPipe();
+    if (currentNumberedPipe != nullptr) {
+        // cerr << "currentNumberedPipe " << currentNumberedPipe[READ] << " " << currentNumberedPipe[WRITE] << endl;
+        currentPipe[READ] = currentNumberedPipe[READ];
+        currentPipe[WRITE] = currentNumberedPipe[WRITE];
+        delete currentNumberedPipe;
+    }
 
-    numberedPipes.erase(
-        std::remove_if(numberedPipes.begin(), numberedPipes.end(),
-                       [&](const NumberedPipe numberedPipe) -> bool { return numberedPipe.count == 0; }),
-        numberedPipes.end());
+    return true;
+}
+
+bool PipeManager::parentPipeHandler(NumberedPipe *numberedPipe, bool pipeEnd, std::string outFilename) {
+    if (currentPipe[READ] != 0 && currentPipe[WRITE] != 0) {
+        close(currentPipe[READ]);
+        close(currentPipe[WRITE]);
+    }
 
     if (!pipeEnd) {
-        if (pipe(newPipe)) {
-            return false;
+        if (numberedPipe != nullptr) {
+            dup2(numberedPipe->pipe[READ], newPipe[READ]);
+        } else {
+            currentPipe[READ] = newPipe[READ];
+            currentPipe[WRITE] = newPipe[WRITE];
         }
     }
 
     return true;
 }
 
-bool PipeManager::parentPipeHandler(bool pipeEnd, std::string outFilename) {
-    for (auto currentPipePair : currentPipes) {
-        int currentPipe[2] = {currentPipePair.first, currentPipePair.second};
+bool PipeManager::childPipeHandler(NumberedPipe *numberedPipe, bool pipeEnd, std::string outFilename) {
+    // cerr << "child currentPipe " << currentPipe[READ] << " " << currentPipe[WRITE] << endl;
 
-        if (currentPipe[READ] != 0 && currentPipe[WRITE] != 0) {
-            close(currentPipe[READ]);
-            close(currentPipe[WRITE]);
-        }
+    if (currentPipe[READ] != 0 && currentPipe[WRITE] != 0) {
+        dup2(currentPipe[READ], fileno(stdin));
+        close(currentPipe[READ]);
+        close(currentPipe[WRITE]);
     }
-
-    if (!pipeEnd) {
-        currentPipes[0].first = newPipe[READ];
-        currentPipes[0].second = newPipe[WRITE];
-    }
-
-    return true;
-}
-
-bool PipeManager::childPipeHandler(bool pipeEnd, std::string outFilename) {
-    for (auto currentPipePair : currentPipes) {
-        int currentPipe[2] = {currentPipePair.first, currentPipePair.second};
-
-        if (currentPipe[READ] != 0 && currentPipe[WRITE] != 0) {
-            cerr << currentPipe[READ] << " " << currentPipe[WRITE] << " to stdin" << endl;
-
-            dup2(currentPipe[READ], fileno(stdin));
-            // close(currentPipe[READ]);
-            // close(currentPipe[WRITE]);
-        }
-    }
-
-
 
     if (!pipeEnd) {
         close(newPipe[READ]);
         dup2(newPipe[WRITE], fileno(stdout));
         close(newPipe[WRITE]);
-
     } else {
         if (outFilename != "") {
             int permission = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
@@ -115,22 +93,38 @@ bool PipeManager::childPipeHandler(bool pipeEnd, std::string outFilename) {
     return true;
 }
 
+NumberedPipe PipeManager::addNumberedPipe(int countIn, bool includeStderr) {
+    NumberedPipe numberedPipe;
 
-bool PipeManager::addNumberedPipe(int count, bool includeStderr) {
-    NumberedPipe newNumberedPipe;
-    newNumberedPipe.count = count;
-    newNumberedPipe.pipe[READ] = currentPipes[0].first;
-    newNumberedPipe.pipe[WRITE] = currentPipes[0].second;
-    newNumberedPipe.includeStderr = includeStderr;
+    int idx = count + countIn;
+    auto findedPipeIter = countPipeMap.find(idx);
 
-    numberedPipes.push_back(newNumberedPipe);
-
-    return true;
-}
-
-
-void PipeManager::reduceNumberedPipesCount() {
-    for (int i = 0; i < int(numberedPipes.size()); i++) {
-        numberedPipes[i].count--;
+    int findedPipe[2] = {0, 0};
+    if (findedPipeIter == countPipeMap.end()) {
+        pipe(findedPipe);
+        countPipeMap[idx] = pair<int, int>(findedPipe[READ], findedPipe[WRITE]);
+    } else {
+        findedPipe[READ] = findedPipeIter->second.first;
+        findedPipe[WRITE] = findedPipeIter->second.second;
     }
+
+    numberedPipe.pipe[READ] = findedPipe[READ];
+    numberedPipe.pipe[WRITE] = findedPipe[WRITE];
+
+    return numberedPipe;
 }
+
+int *PipeManager::getCurrentNumberedPipe() {
+    int *findedPipe = new int[2];
+    auto findedPipeIter = countPipeMap.find(count);
+    if (findedPipeIter == countPipeMap.end()) {
+        return nullptr;
+    } else {
+        findedPipe[READ] = findedPipeIter->second.first;
+        findedPipe[WRITE] = findedPipeIter->second.second;
+        countPipeMap.erase(count);
+    }
+    return findedPipe;
+}
+
+void PipeManager::reduceNumberedPipesCount() { count++; }
