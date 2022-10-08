@@ -107,7 +107,7 @@ bool NPShell::executeForkedCommand(const std::string& command, const std::vector
         execvp(command.c_str(), (char**)Util::createArgv(command, args));
 
         // cerr << "errno = " << errno << endl;
-        if (errno == 13) {
+        if (errno == 13 || errno == 2) {
             cerr << "Unknown command: [" << command << "]." << endl;
         }
         exit(0);
