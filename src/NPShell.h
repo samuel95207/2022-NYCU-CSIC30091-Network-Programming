@@ -1,8 +1,14 @@
 #include <string>
 #include <vector>
 
+#ifndef _PIPE_MANAGER_H_
+#define _PIPE_MANAGER_H_
+#include "PipeManager.h"
+#endif
+
 class NPShell {
     const std::string symbol = "% ";
+    PipeManager pipeManager;
     bool exitFlag = false;
 
    public:
@@ -12,6 +18,9 @@ class NPShell {
     friend class BuildinCommand;
 
    private:
-    void executeCommand(const std::string& command,const std::vector<std::string>& args);
+    bool executeForkedCommnad(const std::string& command, const std::vector<std::string>& args, bool pipeEnd = false,
+                              std::string outFilename = "");
     void setExit();
+
+    static void childSignalHandler(int signum);
 };

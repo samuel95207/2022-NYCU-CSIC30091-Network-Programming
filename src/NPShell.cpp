@@ -1,3 +1,7 @@
+#include <sys/wait.h>
+#include <unistd.h>
+
+#include <cstdlib>
 #include <iostream>
 
 #ifndef _NPSHELL_H_
@@ -15,18 +19,46 @@
 #include "BuildinCommand.h"
 #endif
 
+#ifndef _UTIL_H_
+#define _UTIL_H_
+#include "Util.h"
+#endif
+
+
 using namespace std;
 
-NPShell::NPShell() {}
+NPShell::NPShell() { signal(SIGCHLD, NPShell::childSignalHandler); }
 
 void NPShell::run() {
-    string command;
-    while (cout << symbol && getline(cin, command)) {
-        auto parseResult = Parser::parse(command);
-        Parser::printParseResult(parseResult);
+    string commandRaw;
+    while (cout << symbol && getline(cin, commandRaw)) {
+        auto parseResult = Parser::parse(commandRaw);
+        // Parser::printParseResult(parseResult);
+
+        pipeManager.newSession();
+
+        for (int i = 0; i < int(parseResult.commands.size()); i++) {
+            auto command = parseResult.commands[i].first;
+            auto args = parseResult.commands[i].second;
+            auto prevOperator = (i != 0 ? parseResult.operators[i - 1] : "");
+            auto nextOperator = (i != int(parseResult.operators.size()) ? parseResult.operators[i] : "");
 
 
-        executeCommand(parseResult.commands[0].first, parseResult.commands[0].second);
+            // Filter buildin commands
+            if (BuildinCommand::isBuildinCommand(command)) {
+                BuildinCommand::execute(*this, command, args);
+                continue;
+            }
+
+            if (nextOperator == "|") {
+                executeForkedCommnad(command, args);
+            } else if (nextOperator == ">") {
+            } else if (nextOperator[0] == '|') {
+            } else if (nextOperator[0] == '!') {
+            } else {
+                executeForkedCommnad(command, args, true);
+            }
+        }
 
         if (exitFlag) {
             break;
@@ -34,11 +66,52 @@ void NPShell::run() {
     }
 }
 
+bool NPShell::executeForkedCommnad(const std::string& command, const std::vector<std::string>& args, bool pipeEnd,
+                                   std::string outFilename) {
+    bool pipeStatus = pipeManager.rootPipeHandler();
+
+    if (!pipeStatus) {
+        cerr << "Pipe error!" << endl;
+        return false;
+    }
+
+
+    pid_t pid = fork();
+
+    if (pid == -1) {
+        cerr << "Fork error!" << endl;
+        return false;
+
+    } else if (pid > 0) {
+        // Parent Process
+        pipeManager.parentPipeHandler(pipeEnd, outFilename);
+
+        if (pipeEnd) {
+            int status;
+            waitpid(pid, &status, 0);
+        }
+
+    } else {
+        // Children Process
+        pipeManager.childPipeHandler(pipeEnd, outFilename);
+
+        execvp(command.c_str(), (char**)Util::createArgv(command, args));
+
+        // cerr << "errno = " << errno << endl;
+        if (errno == 13) {
+            cerr << "Unknown command: [" << command << "]." << endl;
+        }
+        exit(0);
+    }
+
+    return true;
+}
+
+
 void NPShell::setExit() { exitFlag = true; }
 
 
-void NPShell::executeCommand(const std::string& command, const std::vector<std::string>& args) {
-    if (BuildinCommand::isBuildinCommand(command)) {
-        BuildinCommand::execute(*this, command, args);
-    }
+void NPShell::childSignalHandler(int signum) {
+    int status;
+    wait(&status);
 }
