@@ -1,4 +1,4 @@
-TARGET = ./working_dir/npshell
+TARGET = ./npshell
 
 SRC_DIR = ./src
 SRC_SUBDIR += . 
@@ -43,13 +43,14 @@ $(OBJS) : $(OBJ_DIR)/%.o:%.$(TYPE)
 clean : cleanobj
 	@echo "Remove all executable files and output files"
 	rm -f $(TARGET)
-	rm -f ./outputs/*
+	rm -f working_dir/$(TARGET)
 cleanobj :
 	@echo "Remove object files"
 	rm -rf $(OBJ_DIR)/*.o
 
-run:
-	@$(TARGET)
+test:
+	@make
+	@cp $(TARGET) working_dir/
 
 commands: create_working_dir noop number removetag removetag0 ls cat
 
