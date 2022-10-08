@@ -51,12 +51,18 @@ void NPShell::run() {
             }
 
             if (nextOperator == "|") {
-                executeForkedCommnad(command, args);
+                executeForkedCommand(command, args);
             } else if (nextOperator == ">") {
+                if (i + 1 >= int(parseResult.commands.size())) {
+                    cerr << "Error! Filename cannot be empty." << endl;
+                }
+                string filename = parseResult.commands[i + 1].first;
+                executeForkedCommand(command, args, true, filename);
+                break;
             } else if (nextOperator[0] == '|') {
             } else if (nextOperator[0] == '!') {
             } else {
-                executeForkedCommnad(command, args, true);
+                executeForkedCommand(command, args, true);
             }
         }
 
@@ -66,7 +72,7 @@ void NPShell::run() {
     }
 }
 
-bool NPShell::executeForkedCommnad(const std::string& command, const std::vector<std::string>& args, bool pipeEnd,
+bool NPShell::executeForkedCommand(const std::string& command, const std::vector<std::string>& args, bool pipeEnd,
                                    std::string outFilename) {
     bool pipeStatus = pipeManager.rootPipeHandler();
 

@@ -3,6 +3,9 @@
 #include "PipeManager.h"
 #endif
 
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
@@ -60,6 +63,12 @@ bool PipeManager::childPipeHandler(bool pipeEnd, std::string outFilename) {
 
         dup2(tmpPipe[WRITE], fileno(stdout));
         close(tmpPipe[WRITE]);
+    } else {
+        if (outFilename != "") {
+            int permission = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
+            int outfile = open(outFilename.c_str(), O_WRONLY | O_TRUNC | O_CREAT, permission);
+            dup2(outfile, fileno(stdout));
+        }
     }
 
     return true;

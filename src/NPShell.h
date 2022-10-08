@@ -18,7 +18,7 @@ class NPShell {
     friend class BuildinCommand;
 
    private:
-    bool executeForkedCommnad(const std::string& command, const std::vector<std::string>& args, bool pipeEnd = false,
+    bool executeForkedCommand(const std::string& command, const std::vector<std::string>& args, bool pipeEnd = false,
                               std::string outFilename = "");
     void setExit();
 
