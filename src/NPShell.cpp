@@ -83,7 +83,7 @@ void NPShell::run()
                 auto numberedPipe = pipeManager.addNumberedPipe(count, false);
                 executeForkedCommand(command, args, &numberedPipe);
 
-                if (i + 1 != int(parseResult.commands.size()))
+                if (i + 1 > int(parseResult.commands.size()))
                 {
                     pipeManager.reduceNumberedPipesCount();
                 }
@@ -97,7 +97,7 @@ void NPShell::run()
                 auto numberedPipe = pipeManager.addNumberedPipe(count, true);
                 executeForkedCommand(command, args, &numberedPipe);
 
-                if (i + 1 != int(parseResult.commands.size()))
+                if (i + 1 > int(parseResult.commands.size()))
                 {
                     pipeManager.reduceNumberedPipesCount();
                 }
@@ -154,7 +154,7 @@ bool NPShell::executeForkedCommand(const std::string &command, const std::vector
 
         execvp(command.c_str(), (char **)Util::createArgv(command, args));
 
-        // cerr << "errno = " << errno << endl;
+        cerr << "errno = " << errno << endl;
         if (errno == 13 || errno == 2)
         {
             cerr << "Unknown command: [" << command << "]." << endl;
