@@ -113,6 +113,7 @@ NumberedPipe PipeManager::addNumberedPipe(int countIn, bool includeStderr) {
 
     numberedPipe.pipe[READ] = findedPipe[READ];
     numberedPipe.pipe[WRITE] = findedPipe[WRITE];
+    numberedPipe.includeStderr = includeStderr;
 
     return numberedPipe;
 }
