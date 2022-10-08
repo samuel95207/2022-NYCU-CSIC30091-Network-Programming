@@ -27,7 +27,10 @@
 
 using namespace std;
 
-NPShell::NPShell() { signal(SIGCHLD, NPShell::childSignalHandler); }
+NPShell::NPShell() {
+    signal(SIGCHLD, NPShell::childSignalHandler);
+    BuildinCommand::execute(*this, "setenv", {vector<string>({"PATH", "bin:."})});
+}
 
 void NPShell::run() {
     string commandRaw;
