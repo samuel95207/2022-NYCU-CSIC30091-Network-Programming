@@ -81,7 +81,7 @@ bool PipeManager::childPipeHandler(NumberedPipe *numberedPipe, bool pipeEnd, std
     if (!pipeEnd) {
         close(newPipe[READ]);
         dup2(newPipe[WRITE], fileno(stdout));
-        if(numberedPipe != nullptr && numberedPipe->includeStderr){
+        if (numberedPipe != nullptr && numberedPipe->includeStderr) {
             dup2(newPipe[WRITE], fileno(stderr));
         }
         close(newPipe[WRITE]);
