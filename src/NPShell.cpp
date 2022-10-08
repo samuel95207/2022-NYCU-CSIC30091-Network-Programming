@@ -61,6 +61,7 @@ void NPShell::run() {
                 // Direct to file
                 if (i + 1 >= int(parseResult.commands.size())) {
                     cerr << "Error! Filename cannot be empty." << endl;
+                    break;
                 }
                 string filename = parseResult.commands[i + 1].first;
                 executeForkedCommand(command, args, nullptr, true, filename);
