@@ -18,8 +18,8 @@ class NPShell {
     friend class BuildinCommand;
 
    private:
-    bool executeForkedCommand(const std::string &command, const std::vector<std::string> &args,
-                              NumberedPipe *numberedPipe = nullptr, bool pipeEnd = false, std::string outFilename = "");
+    bool executeForkedCommand(const std::string &command, const std::vector<std::string> &args, PipeMode pipeMode,
+                              std::string outFilename = "");
     void setExit();
 
     static void childSignalHandler(int signum);

@@ -3,10 +3,15 @@
 #include <utility>
 #include <vector>
 
-struct NumberedPipe {
-    int pipe[2];
-    bool includeStderr;
+enum class PipeMode
+{
+	NORMAL_PIPE,
+    FILE_REDIRECT,
+	LAST_COMMAND,
+	NUMBERED_PIPE,
+    NUMBERED_PIPE_STDERR
 };
+
 
 class PipeManager {
     const int READ = 0;
@@ -14,6 +19,7 @@ class PipeManager {
 
     int currentPipe[2];
     int newPipe[2];
+    int newNumberedPipe[2];
 
     int count = 0;
     std::unordered_map<int, std::pair<int, int>> countPipeMap;
@@ -21,11 +27,11 @@ class PipeManager {
    public:
     PipeManager();
     bool newSession();
-    bool rootPipeHandler(NumberedPipe *numberedPipe = nullptr, bool pipeEnd = false, std::string outFilename = "");
-    bool parentPipeHandler(NumberedPipe *numberedPipe = nullptr, bool pipeEnd = false, std::string outFilename = "");
-    bool childPipeHandler(NumberedPipe *numberedPipe = nullptr, bool pipeEnd = false, std::string outFilename = "");
+    bool rootPipeHandler(PipeMode pipeMode, std::string outFilename = "");
+    bool parentPipeHandler(PipeMode pipeMode, std::string outFilename = "");
+    bool childPipeHandler(PipeMode pipeMode, std::string outFilename = "");
 
-    NumberedPipe addNumberedPipe(int countIn, bool includeStderr);
-    int *getCurrentNumberedPipe();
+    void addNumberedPipe(int countIn);
+    std::pair<int, int> getCurrentNumberedPipe();
     void reduceNumberedPipesCount();
 };
