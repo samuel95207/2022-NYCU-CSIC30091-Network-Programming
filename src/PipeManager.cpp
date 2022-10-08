@@ -28,7 +28,7 @@ bool PipeManager::newSession() {
 }
 
 bool PipeManager::rootPipeHandler(PipeMode pipeMode, std::string outFilename) {
-    if (pipeMode != PipeMode::LAST_COMMAND) {
+    if (pipeMode != PipeMode::CONSOLE_OUTPUT) {
         if (pipeMode == PipeMode::NUMBERED_PIPE || pipeMode == PipeMode::NUMBERED_PIPE_STDERR) {
             // cerr << "Add numberedPipe " << numberedPipe->pipe[READ] << " " << numberedPipe->pipe[WRITE] << endl;
 
@@ -57,7 +57,7 @@ bool PipeManager::parentPipeHandler(PipeMode pipeMode, std::string outFilename) 
         close(currentPipe[WRITE]);
     }
 
-    if (pipeMode != PipeMode::LAST_COMMAND) {
+    if (pipeMode != PipeMode::CONSOLE_OUTPUT) {
         if (pipeMode == PipeMode::NUMBERED_PIPE || pipeMode == PipeMode::NUMBERED_PIPE_STDERR) {
             dup2(newNumberedPipe[READ], newPipe[READ]);
         } else {
@@ -80,11 +80,11 @@ bool PipeManager::childPipeHandler(PipeMode pipeMode, std::string outFilename) {
 
 
 
-    if (pipeMode == PipeMode::FILE_REDIRECT) {
+    if (pipeMode == PipeMode::FILE_OUTPUT) {
         int permission = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
         int outfile = open(outFilename.c_str(), O_WRONLY | O_TRUNC | O_CREAT, permission);
         dup2(outfile, fileno(stdout));
-    } else if (pipeMode != PipeMode::LAST_COMMAND) {
+    } else if (pipeMode != PipeMode::CONSOLE_OUTPUT) {
         close(newPipe[READ]);
         dup2(newPipe[WRITE], fileno(stdout));
         if (pipeMode == PipeMode::NUMBERED_PIPE_STDERR) {

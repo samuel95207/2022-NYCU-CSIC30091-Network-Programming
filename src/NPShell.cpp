@@ -64,7 +64,7 @@ void NPShell::run() {
                     break;
                 }
                 string filename = parseResult.commands[i + 1].first;
-                executeForkedCommand(command, args, PipeMode::FILE_REDIRECT, filename);
+                executeForkedCommand(command, args, PipeMode::FILE_OUTPUT, filename);
                 break;
 
             } else if (nextOperator[0] == '|') {
@@ -94,7 +94,7 @@ void NPShell::run() {
             } else {
                 // Last command
                 // cout << "last command" <<endl;
-                executeForkedCommand(command, args, PipeMode::LAST_COMMAND);
+                executeForkedCommand(command, args, PipeMode::CONSOLE_OUTPUT);
             }
         }
 
