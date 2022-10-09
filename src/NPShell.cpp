@@ -38,10 +38,6 @@ void NPShell::run() {
         auto parseResult = Parser::parse(commandRaw);
         // Parser::printParseResult(parseResult);
 
-        if (parseResult.commands.size() == 0) {
-            pipeManager.newSession();
-        }
-
 
         for (int i = 0; i < int(parseResult.commands.size()); i++) {
             auto command = parseResult.commands[i].first;
