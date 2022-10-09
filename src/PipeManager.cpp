@@ -65,6 +65,9 @@ bool PipeManager::rootPipeHandler(PipeMode pipeMode, std::string outFilename) {
         }
     }
 
+    // cerr << "\tCurrentPipe " << currentPipe[READ] << " " << currentPipe[WRITE] << endl;
+    // cerr << "\tNewPipe " << newPipe[READ] << " " << newPipe[WRITE] << endl;
+
 
     return true;
 }
@@ -79,6 +82,9 @@ bool PipeManager::parentPipeHandler(PipeMode pipeMode, std::string outFilename) 
         currentPipe[READ] = newPipe[READ];
         currentPipe[WRITE] = newPipe[WRITE];
     }
+
+    newPipe[READ] = 0;
+    newPipe[WRITE] = 0;
 
     return true;
 }
