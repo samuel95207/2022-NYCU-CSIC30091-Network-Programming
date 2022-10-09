@@ -48,6 +48,9 @@ bool PipeManager::rootPipeHandler(PipeMode pipeMode, std::string outFilename) {
         // cerr << "currentNumberedPipe " << currentNumberedPipe[READ] << " " << currentNumberedPipe[WRITE] << endl;
         currentPipe[READ] = currentNumberedPipe[READ];
         currentPipe[WRITE] = currentNumberedPipe[WRITE];
+
+        currentNumberedPipe[READ] = 0;
+        currentNumberedPipe[WRITE] = 0;
     }
 
     // Check if new numbered pipe is created
@@ -150,6 +153,7 @@ void PipeManager::loadCurrentNumberedPipe() {
     }
     currentNumberedPipe[READ] = findedPipeIter->second.first;
     currentNumberedPipe[WRITE] = findedPipeIter->second.second;
+    countPipeMap.erase(count);
 }
 
 void PipeManager::reduceNumberedPipesCount() {
