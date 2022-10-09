@@ -1,5 +1,6 @@
 npshell
-working_dir/bin
-working_dir/npshell
+working_dir
+!working_dir/test.html
 src/obj
+testcase
 311511034.zip
