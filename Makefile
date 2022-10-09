@@ -6,7 +6,7 @@ INCLUDE_DIR += ./src
 OBJ_DIR = ./src/obj
 
 CC = g++
-C_FLAGS = -g -Wall -std=c++11
+C_FLAGS = -g -Wall -std=c++17 -O3
 LD = $(CC)
 INCLUDES += -I$(INCLUDE_DIR)
 LD_FLAFS += 
@@ -40,10 +40,10 @@ $(OBJS) : $(OBJ_DIR)/%.o:%.$(TYPE)
 	@echo "Compile finished"
 
 .PHONY : clean cleanobj
-clean : cleanobj
+clean : cleanobj clean_working_dir clean_case
 	@echo "Remove all executable files and output files"
 	rm -f $(TARGET)
-	rm -f working_dir/$(TARGET)
+
 cleanobj :
 	@echo "Remove object files"
 	rm -rf $(OBJ_DIR)/*.o
@@ -51,6 +51,8 @@ cleanobj :
 test:
 	@make
 	@cp $(TARGET) working_dir/
+
+
 
 zip:
 	@make clean
@@ -65,10 +67,16 @@ zip:
 	@rm -rf 311511034
 
 
+
+
 commands: create_working_dir noop number removetag removetag0 ls cat
 
 clean_command:
 	rm working_dir/bin/*
+
+clean_working_dir:
+	rm -f working_dir/$(TARGET)
+	rm -f working_dir/*.txt
 
 create_working_dir:
 	mkdir -p working_dir/bin
@@ -85,3 +93,18 @@ ls:
 	cp /usr/bin/ls working_dir/bin/ls
 cat:
 	cp /usr/bin/cat working_dir/bin/cat
+
+
+
+case%: test case_workspace 
+	@ cd working_dir; \
+	./npshell <../testcase/cases/$(patsubst case%,%,$@) >../testcase/outputs/$(patsubst case%,%,$@) 2>&1
+	diff  testcase/outputs/$(patsubst case%,%,$@) testcase/answers/$(patsubst case%,%,$@)
+
+clean_case:
+	rm testcase/outputs/*
+
+case_workspace:
+	@cp -r testcase/bins/* working_dir
+	@chmod +x working_dir/bin/*
+	@chmod +x working_dir/npbin/*
