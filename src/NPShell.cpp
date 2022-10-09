@@ -115,8 +115,13 @@ bool NPShell::executeForkedCommand(const std::string &command, const std::vector
     pid_t pid = fork();
 
     if (pid == -1) {
-        cerr << "Fork error!" << endl;
-        return false;
+        if (pipeMode == PipeMode::NORMAL_PIPE || pipeMode == PipeMode::NUMBERED_PIPE ||
+            pipeMode == PipeMode::NUMBERED_PIPE_STDERR) {
+            waitpid(-1, NULL, 0);
+        } else {
+            cerr << "Fork error!" << endl;
+            return false;
+        }
 
     } else if (pid > 0) {
         // Parent Process
