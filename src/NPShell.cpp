@@ -125,7 +125,7 @@ bool NPShell::executeForkedCommand(const std::string &command, const std::vector
             return false;
         }
 
-        if (pipeMode != PipeMode::NORMAL_PIPE) {
+        if (pipeMode == PipeMode::CONSOLE_OUTPUT || pipeMode == PipeMode::FILE_OUTPUT) {
             int status;
             waitpid(pid, &status, 0);
         }
