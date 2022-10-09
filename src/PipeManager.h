@@ -3,14 +3,7 @@
 #include <utility>
 #include <vector>
 
-enum class PipeMode
-{
-	NORMAL_PIPE,
-    FILE_OUTPUT,
-	CONSOLE_OUTPUT,
-	NUMBERED_PIPE,
-    NUMBERED_PIPE_STDERR
-};
+enum class PipeMode { NORMAL_PIPE, FILE_OUTPUT, CONSOLE_OUTPUT, NUMBERED_PIPE, NUMBERED_PIPE_STDERR };
 
 
 class PipeManager {
@@ -19,6 +12,8 @@ class PipeManager {
 
     int currentPipe[2];
     int newPipe[2];
+
+    int currentNumberedPipe[2];
     int newNumberedPipe[2];
 
     int count = 0;
@@ -31,7 +26,11 @@ class PipeManager {
     bool parentPipeHandler(PipeMode pipeMode, std::string outFilename = "");
     bool childPipeHandler(PipeMode pipeMode, std::string outFilename = "");
 
-    void addNumberedPipe(int countIn);
-    std::pair<int, int> getCurrentNumberedPipe();
+    bool addNumberedPipe(int countIn);
+    
+    void printCountPipeMap();
+
+   private:
+    void loadCurrentNumberedPipe();
     void reduceNumberedPipesCount();
 };

@@ -32,12 +32,12 @@ NPShell::NPShell() {
 }
 
 void NPShell::run() {
+    pipeManager.newSession();
     string commandRaw;
     while (cout << symbol && getline(cin, commandRaw)) {
         auto parseResult = Parser::parse(commandRaw);
         // Parser::printParseResult(parseResult);
 
-        pipeManager.newSession();
 
         for (int i = 0; i < int(parseResult.commands.size()); i++) {
             auto command = parseResult.commands[i].first;
@@ -45,11 +45,12 @@ void NPShell::run() {
             auto prevOperator = (i != 0 ? parseResult.operators[i - 1] : "");
             auto nextOperator = (i != int(parseResult.operators.size()) ? parseResult.operators[i] : "");
 
-            pipeManager.reduceNumberedPipesCount();
 
             // Filter buildin commands
             if (BuildinCommand::isBuildinCommand(command)) {
                 BuildinCommand::execute(*this, command, args);
+
+                pipeManager.newSession();
                 continue;
             }
 
@@ -58,13 +59,15 @@ void NPShell::run() {
                 executeForkedCommand(command, args, PipeMode::NORMAL_PIPE);
 
             } else if (nextOperator == ">") {
-                // Direct to file
+                // To file
                 if (i + 1 >= int(parseResult.commands.size())) {
                     cerr << "Error! Filename cannot be empty." << endl;
                     break;
                 }
                 string filename = parseResult.commands[i + 1].first;
                 executeForkedCommand(command, args, PipeMode::FILE_OUTPUT, filename);
+
+                pipeManager.newSession();
                 break;
 
             } else if (nextOperator[0] == '|') {
@@ -75,9 +78,8 @@ void NPShell::run() {
                 pipeManager.addNumberedPipe(count);
                 executeForkedCommand(command, args, PipeMode::NUMBERED_PIPE);
 
-                if (i + 1 > int(parseResult.commands.size())) {
-                    pipeManager.reduceNumberedPipesCount();
-                }
+                pipeManager.newSession();
+
 
             } else if (nextOperator[0] == '!') {
                 // To STDERR numbered pipe
@@ -87,14 +89,13 @@ void NPShell::run() {
                 pipeManager.addNumberedPipe(count);
                 executeForkedCommand(command, args, PipeMode::NUMBERED_PIPE_STDERR);
 
-                if (i + 1 > int(parseResult.commands.size())) {
-                    pipeManager.reduceNumberedPipesCount();
-                }
+                pipeManager.newSession();
 
             } else {
-                // Last command
-                // cout << "last command" <<endl;
+                // To console
                 executeForkedCommand(command, args, PipeMode::CONSOLE_OUTPUT);
+
+                pipeManager.newSession();
             }
         }
 
