@@ -56,10 +56,8 @@ bool PipeManager::rootPipeHandler(PipeMode pipeMode, std::string outFilename) {
     // Check if new numbered pipe is created
     if (pipeMode == PipeMode::NUMBERED_PIPE || pipeMode == PipeMode::NUMBERED_PIPE_STDERR) {
         // cerr << "Add numberedPipe " << numberedPipe->pipe[READ] << " " << numberedPipe->pipe[WRITE] << endl;
-        if (newNumberedPipe[READ] != 0 && newNumberedPipe[WRITE] != 0) {
-            newPipe[READ] = newNumberedPipe[READ];
-            newPipe[WRITE] = newNumberedPipe[WRITE];
-        }
+        newPipe[READ] = newNumberedPipe[READ];
+        newPipe[WRITE] = newNumberedPipe[WRITE];
 
     } else if (pipeMode == PipeMode::NORMAL_PIPE) {
         if (pipe(newPipe)) {
@@ -77,9 +75,7 @@ bool PipeManager::parentPipeHandler(PipeMode pipeMode, std::string outFilename) 
         close(currentPipe[WRITE]);
     }
 
-    if (pipeMode == PipeMode::NUMBERED_PIPE || pipeMode == PipeMode::NUMBERED_PIPE_STDERR) {
-        dup2(newNumberedPipe[READ], newPipe[READ]);
-    } else if (pipeMode == PipeMode::NORMAL_PIPE) {
+    if (pipeMode == PipeMode::NORMAL_PIPE) {
         currentPipe[READ] = newPipe[READ];
         currentPipe[WRITE] = newPipe[WRITE];
     }
@@ -129,7 +125,7 @@ bool PipeManager::addNumberedPipe(int countIn) {
 
     int findedPipe[2] = {0, 0};
     if (findedPipeIter == countPipeMap.end()) {
-        if(pipe(findedPipe)){
+        if (pipe(findedPipe)) {
             return false;
         }
         countPipeMap[idx] = pair<int, int>(findedPipe[READ], findedPipe[WRITE]);
