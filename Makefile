@@ -99,7 +99,7 @@ cat:
 case%: case_workspace 
 	@cd working_dir_tmp ; \
 	./npshell <../testcase/cases/$(patsubst case%,%,$@) >../testcase/outputs/$(patsubst case%,%,$@) 2>&1
-	- diff  testcase/outputs/$(patsubst case%,%,$@) testcase/answers/$(patsubst case%,%,$@)
+	- diff -ZB testcase/outputs/$(patsubst case%,%,$@) testcase/answers/$(patsubst case%,%,$@)
 	@rm -rf working_dir_tmp
 
 clean_case:
