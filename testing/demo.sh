@@ -1,6 +1,7 @@
 #! /bin/sh
 
 SHELL_PATH=$1
+WORK_DIR_2_THRESHOLD=8
 
 if [ -z ${SHELL_PATH} ] || [ ! -x ${SHELL_PATH} ]; then
   echo "Usage: $0 [shell_path]"
@@ -19,7 +20,11 @@ gmake clean
 for i in $( seq ${TEST_CASE_START} 22 ); do
   gmake
   echo "[1;34m===== Test case ${i} =====[m"
-  cd work_dir
+  if [ $i -lt $WORK_DIR_2_THRESHOLD ]; then
+    cd work_dir
+  else
+    cd work_dir_2
+  fi
   rm -f ../output/${i}.txt
   env -i stdbuf -o 0 -e 0 ${SHELL_PATH} < ../test_case/${i}.txt > ../output/${i}.txt 2>&1
   cd ..
