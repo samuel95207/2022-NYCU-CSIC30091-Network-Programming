@@ -40,7 +40,7 @@ $(OBJS) : $(OBJ_DIR)/%.o:%.$(TYPE)
 	@echo "Compile finished"
 
 .PHONY : clean cleanobj
-clean : cleanobj clean_working_dir clean_case
+clean : cleanobj clean_working_dir
 	@echo "Remove all executable files and output files"
 	rm -f $(TARGET)
 
