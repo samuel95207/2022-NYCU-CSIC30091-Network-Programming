@@ -5,3 +5,5 @@ src/obj
 testcase
 311511034.zip
 testing/output
+testing/work_dir
+testing/work_template
