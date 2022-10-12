@@ -55,7 +55,7 @@ run:
 
 testall:
 	@make
-	@cd testing; \
+	@ - cd testing; \
 	./demo.sh ../npshell
 
 
