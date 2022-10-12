@@ -16,7 +16,7 @@ TEST_CASE_START=1
 mkdir -p output
 gmake clean
 
-for i in $( seq ${TEST_CASE_START} 7 ); do
+for i in $( seq ${TEST_CASE_START} 22 ); do
   gmake
   echo "[1;34m===== Test case ${i} =====[m"
   cd work_dir
