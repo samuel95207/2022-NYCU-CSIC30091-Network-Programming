@@ -53,6 +53,14 @@ test:
 	@cp $(TARGET) working_dir/
 
 
+testall:
+	@make
+	@cd testing; \
+	make clean; \
+	make ;\
+	./demo.sh ../npshell
+
+
 
 zip:
 	@make clean
@@ -94,23 +102,3 @@ ls:
 cat:
 	cp /usr/bin/cat working_dir/bin/cat
 
-
-
-case%: case_workspace 
-	@cd working_dir_tmp ; \
-	./npshell <../testcase/cases/$(patsubst case%,%,$@) >../testcase/outputs/$(patsubst case%,%,$@) 2>&1
-	- diff -ZB testcase/outputs/$(patsubst case%,%,$@) testcase/answers/$(patsubst case%,%,$@)
-	@rm -rf working_dir_tmp
-
-clean_case:
-	rm testcase/outputs/*
-
-case_workspace:
-	@ mkdir -p working_dir_tmp
-	@ rm -rf working_dir_tmp/*
-	@ cp -r testcase/bins/* working_dir_tmp
-	@ cp npshell working_dir_tmp
-	@ cp working_dir/test.html working_dir_tmp
-	@ chmod +x working_dir_tmp/npshell
-	@ chmod +x working_dir_tmp/bin/*
-	@ chmod +x working_dir_tmp/npbin/*
