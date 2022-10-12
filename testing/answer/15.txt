@@ -9,7 +9,6 @@ for ras.
 % % Unknown command: [dog].
 %    1 bin
    2 npbin
-   3 npshell
-   4 test
-   5 test.html
+   3 test
+   4 test.html
 % 
