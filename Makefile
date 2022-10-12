@@ -48,7 +48,7 @@ cleanobj :
 	@echo "Remove object files"
 	rm -rf $(OBJ_DIR)/*.o
 
-test:
+run:
 	@make
 	@cp $(TARGET) working_dir/
 
@@ -56,8 +56,6 @@ test:
 testall:
 	@make
 	@cd testing; \
-	make clean; \
-	make ;\
 	./demo.sh ../npshell
 
 

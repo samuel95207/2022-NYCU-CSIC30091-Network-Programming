@@ -15,10 +15,10 @@ TEST_CASE_START=1
 [ -n "$2" ] && TEST_CASE_START=$2
 
 mkdir -p output
-gmake clean
+make clean > /dev/null 2>&1
 
 for i in $( seq ${TEST_CASE_START} 22 ); do
-  gmake
+  make > /dev/null 2>&1
   echo "[1;34m===== Test case ${i} =====[m"
   if [ $i -lt $WORK_DIR_2_THRESHOLD ]; then
     cd work_dir
