@@ -37,10 +37,11 @@ bool BuildinCommand::printenvCommand(NPShell& shell, const string& command, cons
     }
 
     auto envRaw = getenv(args[0].c_str());
-    if(envRaw != nullptr){
-        cout << string(envRaw) << endl;
+    if(envRaw == nullptr){
         return true;
     }
+    
+    cout << string(envRaw) << endl;
 
     return true;
 }
