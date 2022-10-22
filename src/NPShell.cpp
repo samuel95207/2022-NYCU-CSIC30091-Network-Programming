@@ -1,8 +1,11 @@
+#include <pwd.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
 #include <cstdlib>
+#include <fstream>
 #include <iostream>
+#include <string>
 
 #ifndef _NPSHELL_H_
 #define _NPSHELL_H_
@@ -28,6 +31,8 @@ using namespace std;
 
 NPShell::NPShell() {
     signal(SIGCHLD, NPShell::childSignalHandler);
+    historyFilePath = string(getpwuid(getuid())->pw_dir) + "/.npshell_history";
+    // cout << historyFilePath << endl;
     BuildinCommand::execute(*this, "setenv", {vector<string>({"PATH", "bin:."})});
 }
 
@@ -38,6 +43,10 @@ void NPShell::run() {
         auto parseResult = Parser::parse(commandRaw);
         // Parser::printParseResult(parseResult);
 
+
+        ofstream outfile(historyFilePath.c_str(), ios::app);
+        outfile << commandRaw << endl;
+        outfile.close();
 
         for (int i = 0; i < int(parseResult.commands.size()); i++) {
             auto command = parseResult.commands[i].first;

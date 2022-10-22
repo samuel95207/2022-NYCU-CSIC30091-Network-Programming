@@ -11,6 +11,8 @@ class NPShell {
     PipeManager pipeManager;
     bool exitFlag = false;
 
+    std::string historyFilePath;
+   
    public:
     NPShell();
     void run();
