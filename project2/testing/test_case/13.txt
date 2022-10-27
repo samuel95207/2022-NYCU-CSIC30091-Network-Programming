@@ -1,5 +1,0 @@
-removetag0 test.html !2
-noop
-number |1
-grep Error
-exit

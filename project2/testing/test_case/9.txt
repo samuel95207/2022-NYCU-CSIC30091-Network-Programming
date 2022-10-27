@@ -1,2 +1,0 @@
-removetag test.html | number | number
-exit

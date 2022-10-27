@@ -1,3 +1,0 @@
-% % % <BODY>This is a <b>test</b> program
-% % This is a test program
-% 

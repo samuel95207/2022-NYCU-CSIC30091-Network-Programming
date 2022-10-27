@@ -1,3 +1,0 @@
-setenv NP PROGRAMMING
-env | grep NP
-exit

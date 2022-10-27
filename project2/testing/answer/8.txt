@@ -1,9 +1,0 @@
-% bin:.
-% % Unknown command: [square].
-% % npbin
-% Unknown command: [noop].
-% % % bin:npbin
-% % % % .
-% Unknown command: [noop].
-% Unknown command: [square].
-% 

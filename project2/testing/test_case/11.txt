@@ -1,4 +1,0 @@
-removetag test.html |1
-number |1
-figlet
-exit
