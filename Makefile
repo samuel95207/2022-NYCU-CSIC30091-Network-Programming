@@ -8,6 +8,8 @@ np_simple:
 	@cp src/np_simple/np_simple ./np_simple
 
 np_single_proc:
+	@$(MAKE) -C src/np_single_proc
+	@cp src/np_simple/np_single_proc ./np_single_proc
 
 np_multi_proc:
 
