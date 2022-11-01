@@ -19,6 +19,7 @@ User* UserManager::addUser(int fd, sockaddr_in ipAddr) {
     // cout << ipString << endl;
     if (ipUsernameMap.find(ipString) != ipUsernameMap.end()) {
         newUser->name = ipUsernameMap[ipString];
+        nameUserMap[newUser->name] = newUser;
     }
     ipUsernameMap[ipString] = newUser->name;
 
@@ -36,6 +37,9 @@ void UserManager::removeUserById(int id) {
     }
     idUserMap.erase(id);
     fdUserMap.erase(result->second->fd);
+    if (result->second->name != "") {
+        nameUserMap.erase(result->second->name);
+    }
     delete result->second;
 }
 
@@ -46,6 +50,9 @@ void UserManager::removeUserByFd(int fd) {
     }
     idUserMap.erase(result->second->id);
     fdUserMap.erase(fd);
+    if (result->second->name != "") {
+        nameUserMap.erase(result->second->name);
+    }
     delete result->second;
 }
 
@@ -65,9 +72,35 @@ User* UserManager::getUserByFd(int fd) {
     return result->second;
 }
 
+User* UserManager::getUserByName(string name) {
+    if (name == "") {
+        return nullptr;
+    }
+    auto result = nameUserMap.find(name);
+    if (result == nameUserMap.end()) {
+        return nullptr;
+    }
+    return result->second;
+}
+
 map<int, User*> UserManager::getIdUserMap() { return idUserMap; }
 map<int, User*> UserManager::getFdUserMap() { return fdUserMap; }
+map<string, User*> UserManager::getNameUserMap() { return nameUserMap; }
 
+
+bool UserManager::setNameById(int id, string name) {
+    User* user = getUserByName(name);
+    if(user != nullptr || name == ""){
+        return false;
+    }
+
+    user = getUserById(id);
+    
+    user->name = name;
+    nameUserMap[name] = user;
+    
+    return true;
+}
 
 
 

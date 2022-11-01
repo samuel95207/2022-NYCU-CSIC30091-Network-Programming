@@ -14,11 +14,10 @@
 using namespace std;
 
 
-unordered_map<string, BuildinCommandFunction> BuildinCommand::commands = {{"exit", BuildinCommand::exitCommand},
-                                                                          {"printenv", BuildinCommand::printenvCommand},
-                                                                          {"setenv", BuildinCommand::setenvCommand},
-                                                                          {"who", BuildinCommand::whoCommand},
-                                                                          {"yell", BuildinCommand::yellCommand}};
+unordered_map<string, BuildinCommandFunction> BuildinCommand::commands = {
+    {"exit", BuildinCommand::exitCommand},     {"printenv", BuildinCommand::printenvCommand},
+    {"setenv", BuildinCommand::setenvCommand}, {"who", BuildinCommand::whoCommand},
+    {"yell", BuildinCommand::yellCommand},     {"name", BuildinCommand::nameCommand}};
 
 
 bool BuildinCommand::isBuildinCommand(string command) { return commands.find(command) != commands.end(); }
@@ -90,6 +89,29 @@ bool BuildinCommand::yellCommand(NPShell& shell, SingleProcServer& server, int f
                                  const vector<string>& args) {
     User* me = server.userManager.getUserByFd(fd);
     string message = "*** " + (me->name == "" ? "(no name)" : me->name) + " yelled ***: " + args[0] + "\n";
+    server.broadcast(message);
+
+    return true;
+}
+
+
+bool BuildinCommand::nameCommand(NPShell& shell, SingleProcServer& server, int fd, const string& command,
+                                 const vector<string>& args) {
+    User* me = server.userManager.getUserByFd(fd);
+    string name = args[0];
+
+    if (name == "") {
+        cerr << "Error args1 cannot be empty" << endl;
+        return false;
+    }
+    if (!server.userManager.setNameById(me->id, name)) {
+        cerr << "*** User '" << name << "' already exists. ***" << endl;
+        return false;
+    }
+
+    me->name = name;
+    string ipString = string(inet_ntoa(me->ipAddr.sin_addr)) + ":" + to_string((int)ntohs(me->ipAddr.sin_port));
+    string message = "*** User from " + ipString + " is named '" + me->name + "'. ***\n";
     server.broadcast(message);
 
     return true;

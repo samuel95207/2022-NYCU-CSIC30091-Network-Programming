@@ -24,6 +24,7 @@ struct User {
 class UserManager {
     std::map<int, User*> idUserMap;
     std::map<int, User*> fdUserMap;
+    std::map<std::string, User*> nameUserMap;
     std::unordered_map<std::string, std::string> ipUsernameMap;
 
    public:
@@ -32,11 +33,15 @@ class UserManager {
     User* addUser(int fd, sockaddr_in ipAddr);
     void removeUserById(int id);
     void removeUserByFd(int fd);
+    
     User* getUserById(int id);
     User* getUserByFd(int fd);
+    User* getUserByName(std::string name);
+    bool setNameById(int id, std::string name);
 
     std::map<int, User*> getIdUserMap();
     std::map<int, User*> getFdUserMap();
+    std::map<std::string, User*> getNameUserMap();
 
 
    private:
