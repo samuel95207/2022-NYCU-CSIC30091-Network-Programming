@@ -204,3 +204,24 @@ void SingleProcServer::broadcast(string message) {
         close(savedStderr);
     }
 }
+
+void SingleProcServer::sendDirectMessage(int id, std::string message) {
+    User *user = userManager.getUserById(id);
+    if (user == nullptr) {
+        return;
+    }
+
+    int fd = user->fd;
+
+    int savedStdout = dup(fileno(stdout));
+    int savedStderr = dup(fileno(stderr));
+    dup2(fd, fileno(stdout));
+    dup2(fd, fileno(stderr));
+
+    cout << message;
+
+    dup2(savedStdout, fileno(stdout));
+    dup2(savedStderr, fileno(stderr));
+    close(savedStdout);
+    close(savedStderr);
+}

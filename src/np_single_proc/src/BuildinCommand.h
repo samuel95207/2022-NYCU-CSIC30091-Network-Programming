@@ -31,4 +31,6 @@ class BuildinCommand {
                             const std::vector<std::string>& args);
     static bool nameCommand(NPShell& shell, SingleProcServer& server, int fd, const std::string& command,
                             const std::vector<std::string>& args);
+    static bool tellCommand(NPShell& shell, SingleProcServer& server, int fd, const std::string& command,
+                            const std::vector<std::string>& args);
 };

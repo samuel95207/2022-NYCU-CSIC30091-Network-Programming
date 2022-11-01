@@ -57,4 +57,5 @@ class SingleProcServer {
     void closeClient(int fd);
 
     void broadcast(std::string message);
+    void sendDirectMessage(int id, std::string message);
 };

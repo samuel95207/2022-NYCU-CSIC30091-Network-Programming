@@ -17,7 +17,8 @@ using namespace std;
 unordered_map<string, BuildinCommandFunction> BuildinCommand::commands = {
     {"exit", BuildinCommand::exitCommand},     {"printenv", BuildinCommand::printenvCommand},
     {"setenv", BuildinCommand::setenvCommand}, {"who", BuildinCommand::whoCommand},
-    {"yell", BuildinCommand::yellCommand},     {"name", BuildinCommand::nameCommand}};
+    {"yell", BuildinCommand::yellCommand},     {"name", BuildinCommand::nameCommand},
+    {"tell", BuildinCommand::tellCommand}};
 
 
 bool BuildinCommand::isBuildinCommand(string command) { return commands.find(command) != commands.end(); }
@@ -113,6 +114,26 @@ bool BuildinCommand::nameCommand(NPShell& shell, SingleProcServer& server, int f
     string ipString = string(inet_ntoa(me->ipAddr.sin_addr)) + ":" + to_string((int)ntohs(me->ipAddr.sin_port));
     string message = "*** User from " + ipString + " is named '" + me->name + "'. ***\n";
     server.broadcast(message);
+
+    return true;
+}
+
+
+bool BuildinCommand::tellCommand(NPShell& shell, SingleProcServer& server, int fd, const string& command,
+                                 const vector<string>& args) {
+    User* me = server.userManager.getUserByFd(fd);
+
+    int toId = stoi(args[0]);
+    string rawMessage = args[1];
+
+    User* toUser = server.userManager.getUserById(toId);
+    if (toUser == nullptr) {
+        cerr << "*** Error: user #" << toId << " does not exist yet. ***" << endl;
+        return false;
+    }
+
+    string message = "*** " + (me->name == "" ? "(no name)" : me->name) + " told you ***: " + rawMessage + "\n";
+    server.sendDirectMessage(toUser->id, message);
 
     return true;
 }
