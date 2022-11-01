@@ -6,6 +6,9 @@
 #include "PipeManager.h"
 #endif
 
+
+class SingleProcServer;
+
 class NPShell {
     inline static const std::string symbol = "% ";
     PipeManager pipeManager;
@@ -15,8 +18,7 @@ class NPShell {
 
    public:
     NPShell();
-    void execute(std::string commandRaw);
-    void run();
+    void execute(std::string commandRaw, SingleProcServer& server, int fd);
 
     bool getExit();
     

@@ -38,7 +38,8 @@ int passivesock(const char* service, const char* transport, int qlen) {
     sin.sin_addr.s_addr = INADDR_ANY;
     // Get port number
     // service is service name
-    if (pse = getservbyname(service, transport)) sin.sin_port = htons(ntohs((unsigned short)pse->s_port) + portbase);
+    pse = getservbyname(service, transport);
+    if (pse) sin.sin_port = htons(ntohs((unsigned short)pse->s_port) + portbase);
     // service is port number
     else if ((sin.sin_port = htons((unsigned short)atoi(service))) == 0) {
         fprintf(stderr, "can't get \"%s\" service entry\n", service);

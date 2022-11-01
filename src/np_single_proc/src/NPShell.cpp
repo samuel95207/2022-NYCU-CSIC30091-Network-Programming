@@ -34,10 +34,9 @@ NPShell::NPShell() {
     signal(SIGCHLD, NPShell::childSignalHandler);
     historyFilePath = string(getpwuid(getuid())->pw_dir) + "/.npshell_history";
     // cout << historyFilePath << endl;
-    BuildinCommand::execute(*this, "setenv", {vector<string>({"PATH", "bin:."})});
 }
 
-void NPShell::execute(string commandRaw) {
+void NPShell::execute(string commandRaw, SingleProcServer &server, int fd) {
     auto parseResult = Parser::parse(commandRaw);
     // Parser::printParseResult(parseResult);
 
@@ -55,7 +54,7 @@ void NPShell::execute(string commandRaw) {
 
         // Filter buildin commands
         if (BuildinCommand::isBuildinCommand(command)) {
-            BuildinCommand::execute(*this, command, args);
+            BuildinCommand::execute(*this, server, fd, command, args);
 
             pipeManager.newSession();
             continue;
@@ -107,17 +106,6 @@ void NPShell::execute(string commandRaw) {
     }
 }
 
-void NPShell::run() {
-    pipeManager.newSession();
-    string commandRaw;
-    while (cout << symbol && getline(cin, commandRaw)) {
-        execute(commandRaw);
-
-        if (exitFlag) {
-            break;
-        }
-    }
-}
 
 string NPShell::getSymbol() { return symbol; }
 

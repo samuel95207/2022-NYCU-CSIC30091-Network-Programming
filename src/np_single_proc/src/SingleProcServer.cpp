@@ -30,13 +30,20 @@ void SingleProcServer::run() {
     sockaddr_in clientAddr;
 
 
-    int masterSocket = passivesock(to_string(port).c_str(), "TCP", QUEUE_LENGTH);
+    masterSocket = passivesock(to_string(port).c_str(), "TCP", QUEUE_LENGTH);
     if (masterSocket < 0) {
         return;
     }
+
+    int flag;
+    if (setsockopt(masterSocket, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(int)) < 0) {
+        cerr << "setsockopt(SO_REUSEADDR) failed" << endl;
+        return;
+    }
+
     cout << "Listening on port " << port << endl;
 
-    int numFds = getdtablesize();
+    numFds = getdtablesize();
     FD_ZERO(&activeFds);
     FD_SET(masterSocket, &activeFds);
 
@@ -68,18 +75,13 @@ void SingleProcServer::run() {
                  << (int)ntohs(clientAddr.sin_port) << endl;
 
 
-            newClient(slaveSocket);
+            newClient(slaveSocket, clientAddr);
         }
         for (int fd = 0; fd < numFds; fd++) {
             if (fd == masterSocket || !FD_ISSET(fd, &readFds)) {
                 continue;
             }
 
-
-
-            if (npshellMap.find(fd) == npshellMap.end()) {
-                npshellMap[fd] = new NPShell();
-            }
 
 
             int savedStdout = dup(fileno(stdout));
@@ -99,7 +101,7 @@ void SingleProcServer::run() {
             // cout << "input = " << inStr << endl;
             // cout << "size = " << inStr.length() << endl;
 
-            shell->execute(inStr);
+            shell->execute(inStr, *this, fd);
 
 
 
@@ -170,13 +172,27 @@ void SingleProcServer::run() {
 
 
 
-void SingleProcServer::newClient(int fd) {
+void SingleProcServer::newClient(int fd, sockaddr_in ipAddr) {
     FD_SET(fd, &activeFds);
+
+    npshellMap[fd] = new NPShell();
+    BuildinCommand::execute(*npshellMap[fd], *this, fd, "setenv", {vector<string>({"PATH", "bin:."})});
+
 
     int savedStdout = dup(fileno(stdout));
     int savedStderr = dup(fileno(stderr));
     dup2(fd, fileno(stdout));
     dup2(fd, fileno(stderr));
+
+    User *user = userManager.addUser(fd, ipAddr);
+
+    cout << "****************************************" << endl;
+    cout << "** Welcome to the information server. **" << endl;
+    cout << "****************************************" << endl;
+
+    string ipString = string(inet_ntoa(user->ipAddr.sin_addr)) + ":" + to_string((int)ntohs(user->ipAddr.sin_port));
+    broadcast("*** User '" + (user->name == "" ? "(no name)" : user->name) + "' entered from " + ipString + ". ***\n");
+
 
 
     cout << NPShell::getSymbol();
@@ -188,7 +204,40 @@ void SingleProcServer::newClient(int fd) {
     close(savedStdout);
     close(savedStderr);
 }
+
 void SingleProcServer::closeClient(int fd) {
     close(fd);
     FD_CLR(fd, &activeFds);
+
+    User *user = userManager.getUserByFd(fd);
+    broadcast("*** User '" + (user->name == "" ? "(no name)" : user->name) + "' left. ***\n");
+
+    delete npshellMap[fd];
+    npshellMap.erase(fd);
+
+    userManager.removeUserByFd(fd);
+}
+
+
+void SingleProcServer::broadcast(string message) {
+    for (int fd = 0; fd < numFds; fd++) {
+        if (fd == masterSocket || !FD_ISSET(fd, &activeFds)) {
+            continue;
+        }
+
+        int savedStdout = dup(fileno(stdout));
+        int savedStderr = dup(fileno(stderr));
+        dup2(fd, fileno(stdout));
+        dup2(fd, fileno(stderr));
+
+
+        cout << message;
+        cout.flush();
+
+
+        dup2(savedStdout, fileno(stdout));
+        dup2(savedStderr, fileno(stderr));
+        close(savedStdout);
+        close(savedStderr);
+    }
 }
