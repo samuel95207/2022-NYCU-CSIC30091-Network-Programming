@@ -45,6 +45,7 @@ class SingleProcServer {
 
 
     friend class BuildinCommand;
+    friend class NPShell;
 
 
    public:

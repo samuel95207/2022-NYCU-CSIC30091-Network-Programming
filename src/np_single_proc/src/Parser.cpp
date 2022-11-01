@@ -10,7 +10,7 @@
 
 using namespace std;
 
-const vector<string> Parser::operatorTypes = {"\\|", "\\|[1-9][0-9]*", "\\![1-9][0-9]*", ">"};
+const vector<string> Parser::operatorTypes = {"\\|", "\\|[1-9][0-9]*", "\\![1-9][0-9]*", "<[1-9][0-9]*", ">[1-9][0-9]*", ">"};
 const vector<string> Parser::oneArgCommands = {"yell"};
 const vector<string> Parser::twoArgCommands = {"tell"};
 
@@ -27,10 +27,10 @@ ParseResult Parser::parse(string commandStr) {
 
     while (iss >> token) {
         if (isOperator(token)) {
-            if (command == "") {
-                parseResult.errorMessage = "Error! operator before command.";
-                break;
-            }
+            // if (command == "") {
+            //     parseResult.errorMessage = "Error! operator before command.";
+            //     break;
+            // }
             parseResult.operators.push_back(token);
 
             parseResult.commands.push_back(pair<string, vector<string>>(command, args));

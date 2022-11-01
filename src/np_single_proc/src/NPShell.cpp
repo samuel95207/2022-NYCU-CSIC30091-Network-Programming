@@ -27,6 +27,12 @@
 #include "Util.h"
 #endif
 
+#ifndef _SINGLE_PROC_SERVER_H_
+#define _SINGLE_PROC_SERVER_H_
+#include "SingleProcServer.h"
+#endif
+
+
 using namespace std;
 
 
@@ -38,7 +44,7 @@ NPShell::NPShell() {
 
 void NPShell::execute(string commandRaw, SingleProcServer &server, int fd) {
     auto parseResult = Parser::parse(commandRaw);
-    // Parser::printParseResult(parseResult);
+    Parser::printParseResult(parseResult);
 
 
     ofstream outfile(historyFilePath.c_str(), ios::app);
@@ -50,6 +56,11 @@ void NPShell::execute(string commandRaw, SingleProcServer &server, int fd) {
         auto args = parseResult.commands[i].second;
         auto prevOperator = (i != 0 ? parseResult.operators[i - 1] : "");
         auto nextOperator = (i != int(parseResult.operators.size()) ? parseResult.operators[i] : "");
+        auto nextNextOperator = (i + 1 != int(parseResult.operators.size()) ? parseResult.operators[i + 1] : "");
+
+        bool doubleUserPipeFlag = false;
+        int toUserId;
+        int fromUserId;
 
 
         // Filter buildin commands
@@ -97,11 +108,99 @@ void NPShell::execute(string commandRaw, SingleProcServer &server, int fd) {
 
             pipeManager.newSession();
 
+        } else if (nextOperator[0] == '>') {
+            if (nextNextOperator != "<" && nextNextOperator[0] == '<') {
+                doubleUserPipeFlag = true;
+            } else {
+                sscanf(nextOperator.c_str(), ">%d", &toUserId);
+
+                if (server.userManager.getUserById(toUserId) == nullptr) {
+                    cerr << "*** Error: user #" << toUserId << " does not exist yet. ***" << endl;
+                } else {
+                    User *me = server.userManager.getUserByFd(fd);
+                    User *toUser = server.userManager.getUserById(toUserId);
+                    if (!pipeManager.addUserPipe(me->id, toUserId)) {
+                        cerr << "*** Error: the pipe #" << me->id << "->#" << toUserId << " already exists. ***"
+                             << endl;
+                    } else {
+                        string message = "*** " + (me->name == "" ? "(no name)" : me->name) + " (#" +
+                                         to_string(me->id) + ") just piped '" + commandRaw + "' to " +
+                                         (toUser->name == "" ? "(no name)" : toUser->name) + " (#" +
+                                         to_string(toUserId) + ") ***\n";
+                        server.broadcast(message);
+                    }
+                }
+                executeForkedCommand(command, args, PipeMode::USER_PIPE_OUT);
+            }
+
+
+        } else if (nextOperator[0] == '<') {
+            if (nextNextOperator != ">" && nextNextOperator[0] == '>') {
+                doubleUserPipeFlag = true;
+            } else {
+                sscanf(nextOperator.c_str(), "<%d", &fromUserId);
+
+                if (server.userManager.getUserById(fromUserId) == nullptr) {
+                    cerr << "*** Error: user #" << fromUserId << " does not exist yet. ***" << endl;
+                } else {
+                    User *fromUser = server.userManager.getUserById(fromUserId);
+                    User *me = server.userManager.getUserByFd(fd);
+
+                    if (!pipeManager.loadUserPipe(fromUserId, me->id)) {
+                        cerr << "*** Error: the pipe #" << me->id << "->#" << fromUserId << "does not exist yet. ***"
+                             << endl;
+                    } else {
+                        string message = "*** " + (me->name == "" ? "(no name)" : me->name) + " (#" +
+                                         to_string(me->id) + ") just received from " +
+                                         (fromUser->name == "" ? "(no name)" : fromUser->name) + " (#" +
+                                         to_string(fromUserId) + ") by '" + commandRaw + "' ***\n";
+                        server.broadcast(message);
+                    }
+                }
+                executeForkedCommand(command, args, PipeMode::USER_PIPE_IN);
+            }
         } else {
             // To console
             executeForkedCommand(command, args, PipeMode::CONSOLE_OUTPUT);
 
             pipeManager.newSession();
+        }
+
+        if (doubleUserPipeFlag) {
+            User *me = server.userManager.getUserByFd(fd);
+            User *fromUser = server.userManager.getUserById(fromUserId);
+            User *toUser = server.userManager.getUserById(toUserId);
+
+            if (server.userManager.getUserById(fromUserId) == nullptr) {
+                cerr << "*** Error: user #" << fromUserId << " does not exist yet. ***" << endl;
+            } else {
+                if (!pipeManager.loadUserPipe(fromUserId, me->id)) {
+                    cerr << "*** Error: the pipe #" << me->id << "->#" << fromUserId << "does not exist yet. ***"
+                         << endl;
+                } else {
+                    string message = "*** " + (me->name == "" ? "(no name)" : me->name) + " (#" + to_string(me->id) +
+                                     ") just received from " + (fromUser->name == "" ? "(no name)" : fromUser->name) +
+                                     " (#" + to_string(fromUserId) + ") by '" + commandRaw + "' ***\n";
+                    server.broadcast(message);
+                }
+            }
+
+            if (server.userManager.getUserById(toUserId) == nullptr) {
+                cerr << "*** Error: user #" << toUserId << " does not exist yet. ***" << endl;
+            } else {
+                if (!pipeManager.addUserPipe(me->id, toUserId)) {
+                    cerr << "*** Error: the pipe #" << me->id << "->#" << toUserId << " already exists. ***" << endl;
+                } else {
+                    string message = "*** " + (me->name == "" ? "(no name)" : me->name) + " (#" + to_string(me->id) +
+                                     ") just piped '" + commandRaw + "' to " +
+                                     (toUser->name == "" ? "(no name)" : toUser->name) + " (#" + to_string(toUserId) +
+                                     ") ***\n";
+                    server.broadcast(message);
+                }
+            }
+
+
+            executeForkedCommand(command, args, PipeMode::USER_PIPE_BOTH);
         }
     }
 }
