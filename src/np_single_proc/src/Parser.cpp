@@ -11,6 +11,9 @@
 using namespace std;
 
 const vector<string> Parser::operatorTypes = {"\\|", "\\|[1-9][0-9]*", "\\![1-9][0-9]*", ">"};
+const vector<string> Parser::oneArgCommands = {"yell"};
+const vector<string> Parser::twoArgCommands = {"tell"};
+
 
 
 ParseResult Parser::parse(string commandStr) {
@@ -35,6 +38,20 @@ ParseResult Parser::parse(string commandStr) {
             args.clear();
         } else if (command == "") {
             command = token;
+
+            if (isOneArgCommand(command)) {
+                string arg;
+                iss >> std::ws;
+                getline(iss, arg);
+                args.push_back(arg);
+            } else if (isTwoArgCommand(command)) {
+                string arg1, arg2;
+                iss >> arg1;
+                iss >> std::ws;
+                getline(iss, arg2);
+                args.push_back(arg1);
+                args.push_back(arg2);
+            }
         } else {
             args.push_back(token);
         }
@@ -55,6 +72,24 @@ ParseResult Parser::parse(string commandStr) {
 bool Parser::isOperator(std::string token) {
     for (auto operatorType : operatorTypes) {
         if (regex_match(token, regex(operatorType))) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool Parser::isOneArgCommand(std::string command) {
+    for (auto oneAgrCommand : oneArgCommands) {
+        if (regex_match(command, regex(oneAgrCommand))) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool Parser::isTwoArgCommand(std::string command) {
+    for (auto twoAgrCommand : twoArgCommands) {
+        if (regex_match(command, regex(twoAgrCommand))) {
             return true;
         }
     }

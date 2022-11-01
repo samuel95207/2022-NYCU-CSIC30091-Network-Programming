@@ -13,7 +13,11 @@ struct ParseResult {
 
 class Parser {
     static const std::vector<std::string> operatorTypes;
+    static const std::vector<std::string> oneArgCommands;
+    static const std::vector<std::string> twoArgCommands;
     static bool isOperator(std::string token);
+    static bool isOneArgCommand(std::string command);
+    static bool isTwoArgCommand(std::string command);
 
    public:
     static ParseResult parse(std::string commandStr);
