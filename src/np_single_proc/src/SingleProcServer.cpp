@@ -130,43 +130,6 @@ void SingleProcServer::run() {
             close(savedStdout);
             close(savedStderr);
         }
-
-
-        // int clientAddrSize = sizeof(clientAddr);
-        // int slaveSocket = accept(masterSocket, (sockaddr *)&clientAddr, (socklen_t *)&clientAddrSize);
-
-        // if (slaveSocket < 0) {
-        //     if (errno == EINTR) {
-        //         continue;
-        //     }
-        //     // cerr << "accept: " << sys_errlist[errno] << endl;
-        //     return;
-        // }
-
-        // pid_t pid = fork();
-        // if (pid == -1) {
-        //     cerr << "Fork error!" << endl;
-        //     return;
-        // } else if (pid > 0) {
-        //     // Parent Process
-        //     close(slaveSocket);
-        // } else {
-        //     // Child Process
-        //     close(masterSocket);
-
-        //     cout << "New user connected from " << inet_ntoa(clientAddr.sin_addr) << ":"
-        //          << (int)ntohs(clientAddr.sin_port) << endl;
-
-
-        //     dup2(slaveSocket, fileno(stdin));
-        //     dup2(slaveSocket, fileno(stdout));
-        //     dup2(slaveSocket, fileno(stderr));
-
-        //     NPShell shell = NPShell();
-        //     shell.run();
-
-        //     close(slaveSocket);
-        // }
     }
 }
 
