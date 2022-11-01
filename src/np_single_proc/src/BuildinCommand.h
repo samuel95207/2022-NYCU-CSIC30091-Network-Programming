@@ -27,4 +27,6 @@ class BuildinCommand {
                               const std::vector<std::string>& args);
     static bool whoCommand(NPShell& shell, SingleProcServer& server, int fd, const std::string& command,
                            const std::vector<std::string>& args);
+    static bool yellCommand(NPShell& shell, SingleProcServer& server, int fd, const std::string& command,
+                            const std::vector<std::string>& args);
 };

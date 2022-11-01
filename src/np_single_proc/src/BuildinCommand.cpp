@@ -17,7 +17,8 @@ using namespace std;
 unordered_map<string, BuildinCommandFunction> BuildinCommand::commands = {{"exit", BuildinCommand::exitCommand},
                                                                           {"printenv", BuildinCommand::printenvCommand},
                                                                           {"setenv", BuildinCommand::setenvCommand},
-                                                                          {"who", BuildinCommand::whoCommand}};
+                                                                          {"who", BuildinCommand::whoCommand},
+                                                                          {"yell", BuildinCommand::yellCommand}};
 
 
 bool BuildinCommand::isBuildinCommand(string command) { return commands.find(command) != commands.end(); }
@@ -80,6 +81,16 @@ bool BuildinCommand::whoCommand(NPShell& shell, SingleProcServer& server, int fd
         cout << user->id << "\t" << (user->name == "" ? "(no name)" : user->name) << "\t" << ipString << "\t"
              << (user == me ? "<-me" : "") << endl;
     }
+
+    return true;
+}
+
+
+bool BuildinCommand::yellCommand(NPShell& shell, SingleProcServer& server, int fd, const string& command,
+                                 const vector<string>& args) {
+    User* me = server.userManager.getUserByFd(fd);
+    string message = "*** " + (me->name == "" ? "(no name)" : me->name) + " yelled ***: " + args[0] + "\n";
+    server.broadcast(message);
 
     return true;
 }
