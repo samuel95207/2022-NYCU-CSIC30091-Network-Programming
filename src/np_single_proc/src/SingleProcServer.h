@@ -28,8 +28,8 @@
 class BuildinCommand;
 
 class SingleProcServer {
-    const int QUEUE_LENGTH = 5;
-    const int BUF_SIZE = 4098;
+    const int QUEUE_LENGTH = 1024;
+    const int BUF_SIZE = 4096;
 
     int port;
 

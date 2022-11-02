@@ -64,6 +64,13 @@ int passivesock(const char* service, const char* transport, int qlen) {
         return -1;
     }
     // Bind socket to service-end address
+
+    int enable = 1;
+    if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0) {
+        fprintf(stderr, "setsockopt(SO_REUSEADDR) failed\n");
+        return -1;
+    }
+
     if (bind(s, (struct sockaddr*)&sin, sizeof(sin)) < 0) {
         fprintf(stderr, "can't bind to %s port: %s \n", service, strerror(errno));
         return -1;

@@ -35,12 +35,6 @@ void SingleProcServer::run() {
         return;
     }
 
-    int flag;
-    if (setsockopt(masterSocket, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(int)) < 0) {
-        cerr << "setsockopt(SO_REUSEADDR) failed" << endl;
-        return;
-    }
-
     cout << "Listening on port " << port << endl;
 
     numFds = getdtablesize();
@@ -179,6 +173,8 @@ void SingleProcServer::closeClient(int fd) {
     npshellMap.erase(fd);
 
     userManager.removeUserByFd(fd);
+
+    close(fd);
 }
 
 
