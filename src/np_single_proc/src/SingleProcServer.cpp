@@ -90,7 +90,7 @@ void SingleProcServer::run() {
 
 
             readSize = read(fd, buf, sizeof(buf));
-            string inStr = string(buf).substr(0, readSize - 2);
+            string inStr = string(buf).substr(0, readSize - 1);
             if (!inStr.empty() && inStr[inStr.size() - 1] == '\r') {
                 inStr.erase(inStr.size() - 1);
             }
