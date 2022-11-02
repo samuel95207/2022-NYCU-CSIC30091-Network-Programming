@@ -42,7 +42,7 @@ NPShell::NPShell() {
 
 void NPShell::execute(string commandRaw, SingleProcServer &server, int fd) {
     auto parseResult = Parser::parse(commandRaw);
-    Parser::printParseResult(parseResult);
+    // Parser::printParseResult(parseResult);
 
     ofstream outfile(historyFilePath.c_str(), ios::app);
     outfile << commandRaw << endl;
