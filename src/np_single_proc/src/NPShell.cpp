@@ -32,9 +32,7 @@
 #include "SingleProcServer.h"
 #endif
 
-
 using namespace std;
-
 
 NPShell::NPShell() {
     signal(SIGCHLD, NPShell::childSignalHandler);
@@ -46,7 +44,6 @@ void NPShell::execute(string commandRaw, SingleProcServer &server, int fd) {
     auto parseResult = Parser::parse(commandRaw);
     Parser::printParseResult(parseResult);
 
-
     ofstream outfile(historyFilePath.c_str(), ios::app);
     outfile << commandRaw << endl;
     outfile.close();
@@ -55,13 +52,13 @@ void NPShell::execute(string commandRaw, SingleProcServer &server, int fd) {
         auto command = parseResult.commands[i].first;
         auto args = parseResult.commands[i].second;
         auto prevOperator = (i != 0 ? parseResult.operators[i - 1] : "");
-        auto nextOperator = (i != int(parseResult.operators.size()) ? parseResult.operators[i] : "");
-        auto nextNextOperator = (i + 1 != int(parseResult.operators.size()) ? parseResult.operators[i + 1] : "");
+        auto nextOperator = (i < int(parseResult.operators.size()) ? parseResult.operators[i] : "");
+        auto nextNextOperator = (i + 1 < int(parseResult.operators.size()) ? parseResult.operators[i + 1] : "");
+
 
         bool doubleUserPipeFlag = false;
         int toUserId;
         int fromUserId;
-
 
         // Filter buildin commands
         if (BuildinCommand::isBuildinCommand(command)) {
@@ -74,7 +71,6 @@ void NPShell::execute(string commandRaw, SingleProcServer &server, int fd) {
         if (nextOperator == "|") {
             // To next normal pipe
             executeForkedCommand(command, args, PipeMode::NORMAL_PIPE);
-
         } else if (nextOperator == ">") {
             // To file
             if (i + 1 >= int(parseResult.commands.size())) {
@@ -86,7 +82,6 @@ void NPShell::execute(string commandRaw, SingleProcServer &server, int fd) {
 
             pipeManager.newSession();
             break;
-
         } else if (nextOperator[0] == '|') {
             // To numbered pipe
             int count;
@@ -96,8 +91,6 @@ void NPShell::execute(string commandRaw, SingleProcServer &server, int fd) {
             executeForkedCommand(command, args, PipeMode::NUMBERED_PIPE);
 
             pipeManager.newSession();
-
-
         } else if (nextOperator[0] == '!') {
             // To STDERR numbered pipe
             int count;
@@ -107,13 +100,13 @@ void NPShell::execute(string commandRaw, SingleProcServer &server, int fd) {
             executeForkedCommand(command, args, PipeMode::NUMBERED_PIPE_STDERR);
 
             pipeManager.newSession();
-
         } else if (nextOperator[0] == '>') {
+            sscanf(nextOperator.c_str(), ">%d", &toUserId);
             if (nextNextOperator != "<" && nextNextOperator[0] == '<') {
                 doubleUserPipeFlag = true;
-            } else {
-                sscanf(nextOperator.c_str(), ">%d", &toUserId);
+                sscanf(nextNextOperator.c_str(), "<%d", &fromUserId);
 
+            } else {
                 if (server.userManager.getUserById(toUserId) == nullptr) {
                     cerr << "*** Error: user #" << toUserId << " does not exist yet. ***" << endl;
                 } else {
@@ -131,15 +124,16 @@ void NPShell::execute(string commandRaw, SingleProcServer &server, int fd) {
                     }
                 }
                 executeForkedCommand(command, args, PipeMode::USER_PIPE_OUT);
+                pipeManager.newSession();
+
+                break;
             }
-
-
         } else if (nextOperator[0] == '<') {
+            sscanf(nextOperator.c_str(), "<%d", &fromUserId);
             if (nextNextOperator != ">" && nextNextOperator[0] == '>') {
                 doubleUserPipeFlag = true;
+                sscanf(nextNextOperator.c_str(), ">%d", &toUserId);
             } else {
-                sscanf(nextOperator.c_str(), "<%d", &fromUserId);
-
                 if (server.userManager.getUserById(fromUserId) == nullptr) {
                     cerr << "*** Error: user #" << fromUserId << " does not exist yet. ***" << endl;
                 } else {
@@ -147,7 +141,7 @@ void NPShell::execute(string commandRaw, SingleProcServer &server, int fd) {
                     User *me = server.userManager.getUserByFd(fd);
 
                     if (!pipeManager.loadUserPipe(fromUserId, me->id)) {
-                        cerr << "*** Error: the pipe #" << me->id << "->#" << fromUserId << "does not exist yet. ***"
+                        cerr << "*** Error: the pipe #" << me->id << "->#" << fromUserId << " does not exist yet. ***"
                              << endl;
                     } else {
                         string message = "*** " + (me->name == "" ? "(no name)" : me->name) + " (#" +
@@ -158,6 +152,9 @@ void NPShell::execute(string commandRaw, SingleProcServer &server, int fd) {
                     }
                 }
                 executeForkedCommand(command, args, PipeMode::USER_PIPE_IN);
+                pipeManager.newSession();
+
+                break;
             }
         } else {
             // To console
@@ -171,11 +168,13 @@ void NPShell::execute(string commandRaw, SingleProcServer &server, int fd) {
             User *fromUser = server.userManager.getUserById(fromUserId);
             User *toUser = server.userManager.getUserById(toUserId);
 
+            cout << fromUserId << " " << toUserId << endl;
+
             if (server.userManager.getUserById(fromUserId) == nullptr) {
                 cerr << "*** Error: user #" << fromUserId << " does not exist yet. ***" << endl;
             } else {
                 if (!pipeManager.loadUserPipe(fromUserId, me->id)) {
-                    cerr << "*** Error: the pipe #" << me->id << "->#" << fromUserId << "does not exist yet. ***"
+                    cerr << "*** Error: the pipe #" << fromUserId << "->#" << me->id << " does not exist yet. ***"
                          << endl;
                 } else {
                     string message = "*** " + (me->name == "" ? "(no name)" : me->name) + " (#" + to_string(me->id) +
@@ -199,12 +198,13 @@ void NPShell::execute(string commandRaw, SingleProcServer &server, int fd) {
                 }
             }
 
-
             executeForkedCommand(command, args, PipeMode::USER_PIPE_BOTH);
+            pipeManager.newSession();
+
+            break;
         }
     }
 }
-
 
 string NPShell::getSymbol() { return symbol; }
 
@@ -225,7 +225,6 @@ bool NPShell::executeForkedCommand(const std::string &command, const std::vector
             cerr << "Fork error!" << endl;
             return false;
         }
-
     } else if (pid > 0) {
         // Parent Process
         if (!pipeManager.parentPipeHandler(pipeMode, outFilename)) {
@@ -260,7 +259,6 @@ bool NPShell::executeForkedCommand(const std::string &command, const std::vector
 void NPShell::setExit() { exitFlag = true; }
 
 bool NPShell::getExit() { return exitFlag; }
-
 
 void NPShell::childSignalHandler(int signum) {
     int status;

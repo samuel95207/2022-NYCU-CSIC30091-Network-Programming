@@ -205,6 +205,8 @@ bool PipeManager::loadUserPipe(int fromId, int toId) {
     currentUserPipe[READ] = findedPipeIter->second.first;
     currentUserPipe[WRITE] = findedPipeIter->second.second;
 
+    userPipeMap.erase(key);
+
     return true;
 }
 
