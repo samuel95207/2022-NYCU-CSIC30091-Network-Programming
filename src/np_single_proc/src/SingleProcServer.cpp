@@ -175,6 +175,8 @@ void SingleProcServer::closeClient(int fd) {
     delete npshellMap[fd];
     npshellMap.erase(fd);
 
+    cout << "User " << inet_ntoa(user->ipAddr.sin_addr) << ":" << (int)ntohs(user->ipAddr.sin_port) << " left." << endl;
+
     userManager.removeUserByFd(fd);
 
     close(fd);
