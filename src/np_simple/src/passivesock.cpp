@@ -38,7 +38,8 @@ int passivesock(const char* service, const char* transport, int qlen) {
     sin.sin_addr.s_addr = INADDR_ANY;
     // Get port number
     // service is service name
-    if (pse = getservbyname(service, transport)) sin.sin_port = htons(ntohs((unsigned short)pse->s_port) + portbase);
+    pse = getservbyname(service, transport);
+    if (pse) sin.sin_port = htons(ntohs((unsigned short)pse->s_port) + portbase);
     // service is port number
     else if ((sin.sin_port = htons((unsigned short)atoi(service))) == 0) {
         fprintf(stderr, "can't get \"%s\" service entry\n", service);
@@ -63,6 +64,13 @@ int passivesock(const char* service, const char* transport, int qlen) {
         return -1;
     }
     // Bind socket to service-end address
+
+    int enable = 1;
+    if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0) {
+        fprintf(stderr, "setsockopt(SO_REUSEADDR) failed\n");
+        return -1;
+    }
+
     if (bind(s, (struct sockaddr*)&sin, sizeof(sin)) < 0) {
         fprintf(stderr, "can't bind to %s port: %s \n", service, strerror(errno));
         return -1;
