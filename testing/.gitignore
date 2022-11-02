@@ -57,5 +57,6 @@ server/work_dir/user_pipe
 server/work_dir_np_simple/bin
 server/work_dir_np_simple/user_pipe
 server/work_dir_np_single_proc/bin
+server/work_dir_np_single_proc/ls.txt
 server/work_template/bin
 server/work_template/user_pipe
