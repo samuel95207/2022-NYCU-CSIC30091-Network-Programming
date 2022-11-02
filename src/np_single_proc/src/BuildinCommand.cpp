@@ -74,8 +74,8 @@ bool BuildinCommand::whoCommand(NPShell& shell, SingleProcServer& server, int fd
         User* user = idUserPair.second;
         string ipString = string(inet_ntoa(user->ipAddr.sin_addr)) + ":" + to_string((int)ntohs(user->ipAddr.sin_port));
 
-        cout << user->id << "\t" << (user->name == "" ? "(no name)" : user->name) << "\t" << ipString << "\t"
-             << (user == me ? "<-me" : "") << endl;
+        cout << user->id << "\t" << (user->name == "" ? "(no name)" : user->name) << "\t" << ipString
+             << (user == me ? "\t<-me" : "") << endl;
     }
 
     return true;

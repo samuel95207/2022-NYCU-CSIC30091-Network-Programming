@@ -3,6 +3,8 @@
 #include "UserManager.h"
 #endif
 
+#include <iostream>
+
 using namespace std;
 
 UserManager::UserManager() {}
@@ -44,8 +46,8 @@ void UserManager::removeUserById(int id) {
 }
 
 void UserManager::removeUserByFd(int fd) {
-    auto result = idUserMap.find(fd);
-    if (result == idUserMap.end()) {
+    auto result = fdUserMap.find(fd);
+    if (result == fdUserMap.end()) {
         return;
     }
     idUserMap.erase(result->second->id);
@@ -90,15 +92,16 @@ map<string, User*> UserManager::getNameUserMap() { return nameUserMap; }
 
 bool UserManager::setNameById(int id, string name) {
     User* user = getUserByName(name);
-    if(user != nullptr || name == ""){
+    if (user != nullptr || name == "") {
         return false;
     }
 
     user = getUserById(id);
-    
+
+    nameUserMap.erase(user->name);
     user->name = name;
     nameUserMap[name] = user;
-    
+
     return true;
 }
 
