@@ -41,6 +41,7 @@ NPShell::NPShell() {
 }
 
 void NPShell::execute(string commandRaw, SingleProcServer &server, int fd) {
+    loadEnv();
     auto parseResult = Parser::parse(commandRaw);
     // Parser::printParseResult(parseResult);
 
@@ -204,6 +205,8 @@ void NPShell::execute(string commandRaw, SingleProcServer &server, int fd) {
             break;
         }
     }
+
+    resetEnv();
 }
 
 string NPShell::getSymbol() { return symbol; }
@@ -254,6 +257,43 @@ bool NPShell::executeForkedCommand(const std::string &command, const std::vector
     }
 
     return true;
+}
+
+
+void NPShell::setEnv(std::string env, std::string value) {
+    auto envRaw = getenv(env.c_str());
+    if (envMap.find(env) == envMap.end()) {
+        if (envRaw != nullptr) {
+            envMap[env] = pair<string, string>(string(envRaw), value);
+        } else {
+            envMap[env] = pair<string, string>("", value);
+        }
+    } else {
+        envMap[env].second = value;
+    }
+}
+
+string NPShell::getEnv(string env) {
+    auto envRaw = getenv(env.c_str());
+    if (envMap.find(env) == envMap.end()) {
+        if (envRaw != nullptr) {
+            envMap[env] = pair<string, string>(string(envRaw), string(envRaw));
+        } else {
+            envMap[env] = pair<string, string>("", "");
+        }
+    }
+    return envMap[env].second;
+}
+
+void NPShell::loadEnv() {
+    for (auto envPair : envMap) {
+        setenv(envPair.first.c_str(), envPair.second.second.c_str(), 1);
+    }
+}
+void NPShell::resetEnv() {
+    for (auto envPair : envMap) {
+        setenv(envPair.first.c_str(), envPair.second.first.c_str(), 1);
+    }
 }
 
 void NPShell::setExit() { exitFlag = true; }

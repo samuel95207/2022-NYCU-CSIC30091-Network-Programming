@@ -46,12 +46,7 @@ bool BuildinCommand::printenvCommand(NPShell& shell, SingleProcServer& server, i
         return false;
     }
 
-    auto envRaw = getenv(args[0].c_str());
-    if (envRaw == nullptr) {
-        return true;
-    }
-
-    cout << string(envRaw) << endl;
+    cout << string(shell.getEnv(args[0])) << endl;
 
     return true;
 }
@@ -65,7 +60,8 @@ bool BuildinCommand::setenvCommand(NPShell& shell, SingleProcServer& server, int
         value = args[1];
     }
 
-    return !setenv(args[0].c_str(), value.c_str(), 1);
+    shell.setEnv(args[0], value);
+    return true;
 }
 
 

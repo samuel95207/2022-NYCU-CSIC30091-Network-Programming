@@ -1,4 +1,5 @@
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #ifndef _PIPE_MANAGER_H_
@@ -14,14 +15,21 @@ class NPShell {
     PipeManager pipeManager;
     bool exitFlag = false;
 
+    std::unordered_map<std::string, std::pair<std::string, std::string>> envMap;
+
     std::string historyFilePath;
 
    public:
     NPShell();
-    void execute(std::string commandRaw, SingleProcServer& server, int fd);
+    void execute(std::string commandRaw, SingleProcServer &server, int fd);
 
     bool getExit();
-    
+
+    void setEnv(std::string env, std::string value);
+    std::string getEnv(std::string env);
+    void loadEnv();
+    void resetEnv();
+
     static std::string getSymbol();
     friend class BuildinCommand;
 
