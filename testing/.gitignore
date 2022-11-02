@@ -48,3 +48,14 @@ Thumbs.db
 *.mov
 *.wmv
 
+client/multi_client_1/output
+client/multi_client_2/output
+client/single_client/output
+
+server/work_dir/bin
+server/work_dir/user_pipe
+server/work_dir_np_simple/bin
+server/work_dir_np_simple/user_pipe
+server/work_dir_np_single_proc/bin
+server/work_template/bin
+server/work_template/user_pipe
