@@ -44,8 +44,9 @@ bool PipeManager::newSession() {
 }
 
 bool PipeManager::rootPipeHandler(PipeMode pipeMode, PipeMode pipeMode2, std::string outFilename) {
-        // cout << "currentPipe " << endl;
-        // cout << currentPipe[READ] << " " << currentPipe[WRITE] << endl;
+    // cout << "currentPipe " << endl;
+    // cout << currentPipe[READ] << " " << currentPipe[WRITE] << endl;
+    // cout << count << endl;
 
 
     // Check if current numbered pipe exist
@@ -55,7 +56,7 @@ bool PipeManager::rootPipeHandler(PipeMode pipeMode, PipeMode pipeMode2, std::st
             currentPipe[WRITE] = fileno(fopen("/dev/null", "w"));
         } else {
             // cout << "currentUserPipe " << currentUserPipe[READ] << " " << currentUserPipe[WRITE] << endl;
-           
+
             currentPipe[READ] = currentUserPipe[READ];
             currentPipe[WRITE] = currentUserPipe[WRITE];
         }
@@ -66,9 +67,10 @@ bool PipeManager::rootPipeHandler(PipeMode pipeMode, PipeMode pipeMode2, std::st
 
     } else if (currentNumberedPipe[READ] != 0 && currentNumberedPipe[WRITE] != 0) {
         // cout << "currentNumberedPipe " << currentNumberedPipe[READ] << " " << currentNumberedPipe[WRITE] << endl;
-        
+
         currentPipe[READ] = currentNumberedPipe[READ];
         currentPipe[WRITE] = currentNumberedPipe[WRITE];
+
 
         currentNumberedPipe[READ] = 0;
         currentNumberedPipe[WRITE] = 0;
@@ -171,6 +173,9 @@ bool PipeManager::childPipeHandler(PipeMode pipeMode, PipeMode pipeMode2, std::s
 bool PipeManager::addNumberedPipe(int countIn) {
     int idx = count + countIn;
     auto findedPipeIter = countPipeMap.find(idx);
+
+    // cout << "Add numbered pipe" << endl;
+    // cout << idx << endl;
 
     int findedPipe[2] = {0, 0};
     if (findedPipeIter == countPipeMap.end()) {

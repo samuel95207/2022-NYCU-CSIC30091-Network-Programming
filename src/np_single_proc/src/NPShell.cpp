@@ -153,7 +153,7 @@ void NPShell::execute(string commandRaw, SingleProcServer &server, int fd) {
                     User *me = server.userManager.getUserByFd(fd);
 
                     if (!pipeManager.loadUserPipe(fromUserId, me->id)) {
-                        cerr << "*** Error: the pipe #" << me->id << "->#" << fromUserId << " does not exist yet. ***"
+                        cerr << "*** Error: the pipe #" << fromUserId << "->#" << me->id << " does not exist yet. ***"
                              << endl;
                     } else {
                         string message = "*** " + (me->name == "" ? "(no name)" : me->name) + " (#" +
@@ -178,12 +178,12 @@ void NPShell::execute(string commandRaw, SingleProcServer &server, int fd) {
                 } else if (secondOperator[0] == '|') {
                     pipeMode2 = PipeMode::NUMBERED_PIPE;
                     int count;
-                    sscanf(firstOperator.c_str(), "|%d", &count);
+                    sscanf(secondOperator.c_str(), "|%d", &count);
                     pipeManager.addNumberedPipe(count);
                 } else if (secondOperator[0] == '!') {
                     pipeMode2 = PipeMode::NUMBERED_PIPE_STDERR;
                     int count;
-                    sscanf(firstOperator.c_str(), "!%d", &count);
+                    sscanf(secondOperator.c_str(), "!%d", &count);
                     pipeManager.addNumberedPipe(count);
                 }
                 executeForkedCommand(command, args, PipeMode::USER_PIPE_IN, pipeMode2, filename);
