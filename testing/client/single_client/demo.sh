@@ -22,7 +22,7 @@ mkdir -p ${OUTPUT_DIR}
 #${MAKE} clean
 #${MAKE}
 
-for i in $( seq ${TEST_CASE_START} 3 ); do
+for i in $( seq ${TEST_CASE_START} 8 ); do
   echo "[1;34m===== Test case ${i} =====[m"
   rm -f ${OUTPUT_DIR}/${i}.txt
   ${CLIENT} --host ${SERVER_IP} --port ${SERVER_PORT} --testcase ${TESTCASE_DIR}/${i}.txt --delay 0.3 > ${OUTPUT_DIR}/${i}.txt
