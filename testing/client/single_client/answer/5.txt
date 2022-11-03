@@ -1,0 +1,14 @@
+1| % removetag test.html | number | delaycat 3 |2
+1| % removetag test.html |1
+1| % cat
+1| 
+1| Test
+1| This is a test program
+1| for ras.
+1| 
+1|    1 
+1|    2 Test
+1|    3 This is a test program
+1|    4 for ras.
+1|    5 
+1| % exit

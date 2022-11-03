@@ -1,0 +1,50 @@
+1| % setenv PATH bin:npbin
+1| % head -c 4096000000 /dev/urandom | wc -c
+1| 4096000000
+1| % head -c 128000000 /dev/urandom | cat | cat | cat | cat |1
+1| % cat |1
+1| % cat |1
+1| % cat |1
+1| % cat |1
+1| % cat |1
+1| % cat |1
+1| % cat |1
+1| % cat |1
+1| % cat |1
+1| % cat |1
+1| % cat |1
+1| % cat |1
+1| % cat |1
+1| % cat |1
+1| % cat |1
+1| % cat |1
+1| % cat |1
+1| % cat |1
+1| % cat |1
+1| % cat |1
+1| % cat |1
+1| % cat |1
+1| % cat |1
+1| % cat |1
+1| % cat |1
+1| % cat |1
+1| % cat |1
+1| % cat |1
+1| % cat |1
+1| % cat |1
+1| % cat |1
+1| % cat |1
+1| % cat |1
+1| % cat |1
+1| % cat |1
+1| % cat |1
+1| % cat |1
+1| % cat |1
+1| % cat |1
+1| % cat |1
+1| % cat |1
+1| % cat |1
+1| % cat |1
+1| % wc -c
+1| 128000000
+1| % exit
