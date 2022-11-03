@@ -11,6 +11,10 @@ np_single_proc:
 	@$(MAKE) -C src/np_single_proc
 	@cp src/np_single_proc/np_single_proc ./np_single_proc
 
+np_single_proc:
+	@$(MAKE) -C src/np_multi_proc
+	@cp src/np_multi_proc/np_multi_proc ./np_multi_proc
+
 np_multi_proc:
 
 commands: create_working_dir noop number removetag removetag0 ls cat
@@ -19,7 +23,9 @@ clean_command:
 	rm working_dir/bin/*
 
 clean_working_dir:
-	rm -f working_dir/$(TARGET)
+	rm -f working_dir/np_simple
+	rm -f working_dir/np_single_proc
+	rm -f working_dir/np_multi_proc
 	rm -f working_dir/*.txt
 
 create_working_dir:
@@ -39,6 +45,28 @@ cat:
 	cp /usr/bin/cat working_dir/bin/cat
 
 
+clean:
+	@$(MAKE) clean -C src/np_simple
+	@$(MAKE) clean -C src/np_single_proc
+	@$(MAKE) clean -C src/np_multi_proc
+	rm -f working_dir/np_simple
+	rm -f working_dir/np_single_proc
+	rm -f working_dir/np_multi_proc
+	rm -f np_simple
+	rm -f np_single_proc
+	rm -f np_multi_proc
+
+
+run1:
+	@$(MAKE) run -C src/np_simple
+
+run2:
+	@$(MAKE) run -C src/np_simple
+
+run3:
+	@$(MAKE) run -C src/np_simple
+
+
 test1: np_simple
 	@ - cd testing; \
 	./demo.sh ../np_simple 7002
@@ -46,3 +74,11 @@ test1: np_simple
 test2: np_single_proc
 	@ - cd testing; \
 	./demo.sh ../np_single_proc 7002
+
+test3: np_multi_proc
+	@ - cd testing; \
+	./demo.sh ../np_multi_proc 7002
+
+testall: np_simple np_single_proc np_multi_proc
+	@ - cd testing; \
+	./demo.sh ../ 7002 7003 7004
