@@ -9,6 +9,6 @@ testing/work_dir_2
 testing/work_template
 testing/work_template_2
 
-./np_simple
-./np_multi_proc
-./np_single_proc
+np_simple
+np_multi_proc
+np_single_proc
