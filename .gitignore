@@ -12,3 +12,7 @@ testing/work_template_2
 np_simple
 np_multi_proc
 np_single_proc
+
+!src/np_simple
+!src/np_multi_proc
+!src/np_single_proc
