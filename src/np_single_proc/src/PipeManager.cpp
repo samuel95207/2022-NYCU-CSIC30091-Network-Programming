@@ -236,6 +236,22 @@ bool PipeManager::loadUserPipe(int fromId, int toId) {
     return true;
 }
 
+bool PipeManager::closeUserPipe(int id) {
+    vector<pair<int, int>> deleteList;
+    for (auto userPipePair : userPipeMap) {
+        if (userPipePair.first.first == id || userPipePair.first.second == id) {
+            close(userPipePair.second.first);
+            close(userPipePair.second.second);
+            deleteList.push_back(userPipePair.first);
+        }
+    }
+    for (auto key : deleteList) {
+        userPipeMap.erase(key);
+    }
+    return true;
+}
+
+
 
 void PipeManager::loadCurrentNumberedPipe() {
     auto findedPipeIter = countPipeMap.find(count);

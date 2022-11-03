@@ -46,6 +46,8 @@ class PipeManager {
     bool addNumberedPipe(int countIn);
     bool addUserPipe(int fromId, int toId);
     bool loadUserPipe(int fromId, int toId);
+    static bool closeUserPipe(int id);
+
 
 
     void printCountPipeMap();

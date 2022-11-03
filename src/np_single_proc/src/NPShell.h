@@ -19,6 +19,9 @@ class NPShell {
 
     std::string historyFilePath;
 
+
+    friend class SingleProcServer;
+
    public:
     NPShell();
     void execute(std::string commandRaw, SingleProcServer &server, int fd);

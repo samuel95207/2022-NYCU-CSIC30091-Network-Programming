@@ -172,6 +172,9 @@ void SingleProcServer::closeClient(int fd) {
     User *user = userManager.getUserByFd(fd);
     broadcast("*** User '" + (user->name == "" ? "(no name)" : user->name) + "' left. ***\n");
 
+
+    PipeManager::closeUserPipe(user->id);
+
     delete npshellMap[fd];
     npshellMap.erase(fd);
 
