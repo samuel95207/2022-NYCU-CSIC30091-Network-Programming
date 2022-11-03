@@ -164,7 +164,7 @@ void NPShell::execute(string commandRaw, SingleProcServer &server, int fd) {
                     }
                 }
 
-                PipeMode pipeMode2 = PipeMode::NONE;
+                PipeMode pipeMode2 = PipeMode::CONSOLE_OUTPUT;
                 string filename = "";
                 if (secondOperator == "|") {
                     pipeMode2 = PipeMode::NORMAL_PIPE;
