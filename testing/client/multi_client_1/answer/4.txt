@@ -92,10 +92,11 @@
 4|    1 baozi
 4|    2 bin
 4|    3 ls.txt
-4|    4 test.html
-4|    5 test1.txt
-4|    6 test2.txt
-4|    7 user_pipe
+4|    4 nbpin
+4|    5 test.html
+4|    6 test1.txt
+4|    7 test2.txt
+4|    8 user_pipe
 4| % cat <3
 3| *** Error: the pipe #2->#3 does not exist yet. ***
 3| % cat <1

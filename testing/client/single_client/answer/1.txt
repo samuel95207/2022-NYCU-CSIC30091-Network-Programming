@@ -17,6 +17,7 @@
 1| test.html
 1| user_pipe
 1| % ls bin
+1| blackhole
 1| cat
 1| delaycat
 1| env
@@ -24,6 +25,8 @@
 1| grep
 1| head
 1| ls
+1| manyblessings
+1| manyplessings
 1| noop
 1| number
 1| removetag

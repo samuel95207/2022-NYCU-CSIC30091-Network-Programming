@@ -89,6 +89,7 @@
 3| % pikachu
 3| Unknown command: [pikachu].
 3| % cat
+3| baozi
 3| bin
 3| ls.txt
 3| nbpin

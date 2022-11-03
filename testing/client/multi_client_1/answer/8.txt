@@ -28,20 +28,27 @@
 1| bin
 1| % ls > ls.txt
 1| % cat ls.txt
-2|    1 bin
-2|    2 nbpin
-2|    3 test.html
-2|    4 user_pipe
+2|    1 baozi
+2|    2 bin
+2|    3 ls.txt
+2|    4 nbpin
+2|    5 test.html
+2|    6 test1.txt
+2|    7 test2.txt
+2|    8 user_pipe
 2| <!test.html>
 2| <TITLE>Test</TITLE>
 2| <BODY>This is a <b>test</b> program
 2| for ras.
 2| </BODY>
 2| % removetag test.html | number
+1| baozi
 1| bin
 1| ls.txt
 1| nbpin
 1| test.html
+1| test1.txt
+1| test2.txt
 1| user_pipe
 1| % number test.html | removetag
 1|    1 

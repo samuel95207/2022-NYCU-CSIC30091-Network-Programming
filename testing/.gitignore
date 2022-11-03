@@ -57,4 +57,5 @@ server/work_template
 server/work_dir_np_simple
 
 server/work_dir_np_single_proc/bin
+server/work_dir_np_single_proc/nbpin
 server/work_dir_np_single_proc/ls.txt
