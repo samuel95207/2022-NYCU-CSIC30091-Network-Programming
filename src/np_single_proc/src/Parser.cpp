@@ -10,7 +10,8 @@
 
 using namespace std;
 
-const vector<string> Parser::operatorTypes = {"\\|", "\\|[1-9][0-9]*", "\\![1-9][0-9]*", "<[1-9][0-9]*", ">[1-9][0-9]*", ">"};
+const vector<string> Parser::operatorTypes = {"\\|",          "\\|[1-9][0-9]*", "\\![1-9][0-9]*",
+                                              "<[1-9][0-9]*", ">[1-9][0-9]*",   ">"};
 const vector<string> Parser::oneArgCommands = {"yell"};
 const vector<string> Parser::twoArgCommands = {"tell"};
 
@@ -23,21 +24,29 @@ ParseResult Parser::parse(string commandStr) {
     string token;
 
     string command = "";
+    vector<string> operators;
     vector<string> args;
+    Command newCommand;
+
 
     while (iss >> token) {
         if (isOperator(token)) {
-            // if (command == "") {
-            //     parseResult.errorMessage = "Error! operator before command.";
-            //     break;
-            // }
-            parseResult.operators.push_back(token);
+            operators.push_back(token);
 
-            parseResult.commands.push_back(pair<string, vector<string>>(command, args));
             command = "";
-            args.clear();
         } else if (command == "") {
+            if (newCommand.command != "") {
+                newCommand.args = args;
+                newCommand.operators = operators;
+                parseResult.commands.push_back(newCommand);
+
+                newCommand.command = "";
+                args.clear();
+                operators.clear();
+            }
+
             command = token;
+            newCommand.command = command;
 
             if (isOneArgCommand(command)) {
                 string arg;
@@ -57,14 +66,19 @@ ParseResult Parser::parse(string commandStr) {
         }
     }
 
-    if (command != "") {
-        parseResult.commands.push_back(pair<string, vector<string>>(command, args));
+    if (newCommand.command != "") {
+        newCommand.args = args;
+        newCommand.operators = operators;
+
+        parseResult.commands.push_back(newCommand);
+
+        args.clear();
+        operators.clear();
     }
 
 
     if (parseResult.errorMessage != "") {
         parseResult.commands.clear();
-        parseResult.operators.clear();
     }
     return parseResult;
 }
@@ -106,15 +120,16 @@ void Parser::printParseResult(const ParseResult& parseResult) {
     }
     for (int i = 0; i < int(parseResult.commands.size()); i++) {
         auto command = parseResult.commands[i];
-        cout << "Command: " << command.first << endl;
+        cout << "Command: " << command.command << endl;
         cout << "Args: ";
-        for (auto arg : command.second) {
+        for (auto arg : command.args) {
             cout << arg << " ";
         }
-        cout << endl << endl;
-
-        if (i < int(parseResult.operators.size())) {
-            cout << "Operator: " << parseResult.operators[i] << endl << endl;
+        cout << endl;
+        cout << "Operators: ";
+        for (auto op : command.operators) {
+            cout << op << " ";
         }
+        cout << endl << endl;
     }
 }

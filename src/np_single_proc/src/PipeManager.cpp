@@ -43,12 +43,19 @@ bool PipeManager::newSession() {
     return true;
 }
 
-bool PipeManager::rootPipeHandler(PipeMode pipeMode, std::string outFilename) {
+bool PipeManager::rootPipeHandler(PipeMode pipeMode, PipeMode pipeMode2, std::string outFilename) {
+        // cout << "currentPipe " << endl;
+        // cout << currentPipe[READ] << " " << currentPipe[WRITE] << endl;
+
+
     // Check if current numbered pipe exist
     if (pipeMode == PipeMode::USER_PIPE_IN || pipeMode == PipeMode::USER_PIPE_BOTH) {
         if (currentUserPipe[READ] == 0 || currentUserPipe[WRITE] == 0) {
             currentPipe[READ] = fileno(fopen("/dev/null", "r"));
+            currentPipe[WRITE] = fileno(fopen("/dev/null", "w"));
         } else {
+            // cout << "currentUserPipe " << currentUserPipe[READ] << " " << currentUserPipe[WRITE] << endl;
+           
             currentPipe[READ] = currentUserPipe[READ];
             currentPipe[WRITE] = currentUserPipe[WRITE];
         }
@@ -58,7 +65,8 @@ bool PipeManager::rootPipeHandler(PipeMode pipeMode, std::string outFilename) {
 
 
     } else if (currentNumberedPipe[READ] != 0 && currentNumberedPipe[WRITE] != 0) {
-        // cerr << "currentNumberedPipe " << currentNumberedPipe[READ] << " " << currentNumberedPipe[WRITE] << endl;
+        // cout << "currentNumberedPipe " << currentNumberedPipe[READ] << " " << currentNumberedPipe[WRITE] << endl;
+        
         currentPipe[READ] = currentNumberedPipe[READ];
         currentPipe[WRITE] = currentNumberedPipe[WRITE];
 
@@ -69,21 +77,25 @@ bool PipeManager::rootPipeHandler(PipeMode pipeMode, std::string outFilename) {
     // Check if new numbered pipe is created
     if (pipeMode == PipeMode::USER_PIPE_OUT || pipeMode == PipeMode::USER_PIPE_BOTH) {
         if (newUserPipe[READ] == 0 || newUserPipe[WRITE] == 0) {
+            newPipe[READ] = fileno(fopen("/dev/null", "r"));
             newPipe[WRITE] = fileno(fopen("/dev/null", "w"));
         } else {
             newPipe[READ] = newUserPipe[READ];
             newPipe[WRITE] = newUserPipe[WRITE];
         }
 
-    } else if (pipeMode == PipeMode::NUMBERED_PIPE || pipeMode == PipeMode::NUMBERED_PIPE_STDERR) {
+    } else if (pipeMode == PipeMode::NUMBERED_PIPE || pipeMode == PipeMode::NUMBERED_PIPE_STDERR ||
+               pipeMode2 == PipeMode::NUMBERED_PIPE || pipeMode2 == PipeMode::NUMBERED_PIPE_STDERR) {
         // cerr << "Add numberedPipe " << numberedPipe->pipe[READ] << " " << numberedPipe->pipe[WRITE] << endl;
         newPipe[READ] = newNumberedPipe[READ];
         newPipe[WRITE] = newNumberedPipe[WRITE];
 
-    } else if (pipeMode == PipeMode::NORMAL_PIPE) {
+    } else if (pipeMode == PipeMode::NORMAL_PIPE || pipeMode2 == PipeMode::NORMAL_PIPE) {
         if (pipe(newPipe)) {
             return false;
         }
+        // cout << "new pipe" << endl;
+        // cout << newPipe[READ] << " " << newPipe[WRITE] << endl;
     }
 
     // cerr << "\tCurrentPipe " << currentPipe[READ] << " " << currentPipe[WRITE] << endl;
@@ -93,15 +105,18 @@ bool PipeManager::rootPipeHandler(PipeMode pipeMode, std::string outFilename) {
     return true;
 }
 
-bool PipeManager::parentPipeHandler(PipeMode pipeMode, std::string outFilename) {
+bool PipeManager::parentPipeHandler(PipeMode pipeMode, PipeMode pipeMode2, std::string outFilename) {
     if (currentPipe[READ] != 0 && currentPipe[WRITE] != 0) {
         close(currentPipe[READ]);
         close(currentPipe[WRITE]);
     }
 
-    if (pipeMode == PipeMode::NORMAL_PIPE) {
+    if (pipeMode == PipeMode::NORMAL_PIPE || pipeMode2 == PipeMode::NORMAL_PIPE) {
         currentPipe[READ] = newPipe[READ];
         currentPipe[WRITE] = newPipe[WRITE];
+
+        // cout << "Copy current pipe" << endl;
+        // cout << currentPipe[READ] << " " << currentPipe[WRITE] << endl;
     }
 
     newPipe[READ] = 0;
@@ -110,7 +125,7 @@ bool PipeManager::parentPipeHandler(PipeMode pipeMode, std::string outFilename) 
     return true;
 }
 
-bool PipeManager::childPipeHandler(PipeMode pipeMode, std::string outFilename) {
+bool PipeManager::childPipeHandler(PipeMode pipeMode, PipeMode pipeMode2, std::string outFilename) {
     // cerr << "child currentPipe " << currentPipe[READ] << " " << currentPipe[WRITE] << endl;
 
     // Direct pipe from previous command to STDIN of current command
@@ -118,11 +133,14 @@ bool PipeManager::childPipeHandler(PipeMode pipeMode, std::string outFilename) {
         close(currentPipe[WRITE]);
         dup2(currentPipe[READ], fileno(stdin));
         close(currentPipe[READ]);
+
+        // cout << "prev pipe exist" << endl;
+        // cout << currentPipe[READ] << " " << currentPipe[WRITE] << endl;
     }
 
 
     // Direct pipe from current command to output file
-    if (pipeMode == PipeMode::FILE_OUTPUT) {
+    if (pipeMode == PipeMode::FILE_OUTPUT || pipeMode2 == PipeMode::FILE_OUTPUT) {
         int permission = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
         int outfile = open(outFilename.c_str(), O_WRONLY | O_TRUNC | O_CREAT, permission);
         dup2(outfile, fileno(stdout));
@@ -133,16 +151,19 @@ bool PipeManager::childPipeHandler(PipeMode pipeMode, std::string outFilename) {
     // Direct STDOUT or STDERR from current command to new pipe
     if (pipeMode == PipeMode::NORMAL_PIPE || pipeMode == PipeMode::NUMBERED_PIPE ||
         pipeMode == PipeMode::NUMBERED_PIPE_STDERR || pipeMode == PipeMode::USER_PIPE_OUT ||
-        pipeMode == PipeMode::USER_PIPE_BOTH) {
+        pipeMode == PipeMode::USER_PIPE_BOTH || pipeMode2 == PipeMode::NORMAL_PIPE ||
+        pipeMode2 == PipeMode::NUMBERED_PIPE || pipeMode2 == PipeMode::NUMBERED_PIPE_STDERR) {
         close(newPipe[READ]);
         dup2(newPipe[WRITE], fileno(stdout));
-        if (pipeMode == PipeMode::NUMBERED_PIPE_STDERR) {
+        if (pipeMode == PipeMode::NUMBERED_PIPE_STDERR || pipeMode2 == PipeMode::NUMBERED_PIPE_STDERR) {
             dup2(newPipe[WRITE], fileno(stderr));
         }
         close(newPipe[WRITE]);
 
         return true;
     }
+
+
 
     return true;
 }

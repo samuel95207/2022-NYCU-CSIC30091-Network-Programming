@@ -5,6 +5,7 @@
 #include <vector>
 
 enum class PipeMode {
+    NONE,
     NORMAL_PIPE,
     FILE_OUTPUT,
     CONSOLE_OUTPUT,
@@ -38,9 +39,9 @@ class PipeManager {
    public:
     PipeManager();
     bool newSession();
-    bool rootPipeHandler(PipeMode pipeMode, std::string outFilename = "");
-    bool parentPipeHandler(PipeMode pipeMode, std::string outFilename = "");
-    bool childPipeHandler(PipeMode pipeMode, std::string outFilename = "");
+    bool rootPipeHandler(PipeMode pipeMode, PipeMode pipeMode2 = PipeMode::NONE, std::string outFilename = "");
+    bool parentPipeHandler(PipeMode pipeMode, PipeMode pipeMode2 = PipeMode::NONE, std::string outFilename = "");
+    bool childPipeHandler(PipeMode pipeMode, PipeMode pipeMode2 = PipeMode::NONE, std::string outFilename = "");
 
     bool addNumberedPipe(int countIn);
     bool addUserPipe(int fromId, int toId);

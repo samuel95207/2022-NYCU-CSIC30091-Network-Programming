@@ -4,10 +4,14 @@
 #include <vector>
 
 
+struct Command{
+    std::string command;
+    std::vector<std::string> args;
+    std::vector<std::string> operators;
+};
 
 struct ParseResult {
-    std::vector<std::pair<std::string, std::vector<std::string>>> commands;
-    std::vector<std::string> operators;
+    std::vector<Command> commands;
     std::string errorMessage;
 };
 
