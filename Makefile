@@ -9,7 +9,7 @@ np_simple:
 
 np_single_proc:
 	@$(MAKE) -C src/np_single_proc
-	@cp src/np_simple/np_single_proc ./np_single_proc
+	@cp src/np_single_proc/np_single_proc ./np_single_proc
 
 np_multi_proc:
 
@@ -38,3 +38,11 @@ ls:
 cat:
 	cp /usr/bin/cat working_dir/bin/cat
 
+
+test1: np_simple
+	@ - cd testing; \
+	./demo.sh ../np_simple 7002
+
+test2: np_single_proc
+	@ - cd testing; \
+	./demo.sh ../np_single_proc 7002
