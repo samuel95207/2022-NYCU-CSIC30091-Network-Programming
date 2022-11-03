@@ -7,7 +7,7 @@ NP_SHELL_CMD = $(patsubst src/cmd/%.cpp,work_template/bin/%,$(NP_SHELL_CMD_SRC))
 FILE_NAME = $(wildcard src/file/*)
 FILE = $(patsubst src/file/%,work_template/%,$(FILE_NAME))
 
-BUILD_IN_CMD_NAME = ls cat
+BUILD_IN_CMD_NAME = ls cat head wc
 BUILD_IN_CMD = $(patsubst %,work_template/bin/%,$(BUILD_IN_CMD_NAME))
 
 .PHONY: work
@@ -30,8 +30,13 @@ work_template/user_pipe/: | work_template/
 work_template/bin/%: /bin/% | work_template/
 	cp -f $< $@
 
-work_template/bin/:
+work_template/bin/: work_template/nbpin/
 	mkdir work_template/bin/
+	cp -r src/bins/bin/* work_template/bin/
+
+work_template/nbpin/:
+	mkdir work_template/nbpin/
+	cp -r src/bins/nbpin/* work_template/nbpin/
 
 work_template/%: src/file/% | work_template/
 	cp $< $@

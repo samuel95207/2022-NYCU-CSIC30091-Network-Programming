@@ -19,6 +19,7 @@ SERVER_PATH=$( readlink -f ${SERVER_PATH} )
 
 [ -n "$( which gmake )" ] && MAKE=gmake
 [ -z "$( which gmake )" ] && MAKE=make
+${MAKE} clean -j1
 ${MAKE} -j1
 
 SERVER_NAME=`echo $SERVER_PATH | sed 's/.*\///g'`
