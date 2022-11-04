@@ -39,7 +39,7 @@ NPShell::NPShell() {
     // cout << historyFilePath << endl;
 }
 
-void NPShell::execute(string commandRaw, MultiProcServer &server, int fd) {
+void NPShell::execute(string commandRaw, MultiProcServer &server, int pid, int fd) {
     loadEnv();
     auto parseResult = Parser::parse(commandRaw);
     // Parser::printParseResult(parseResult);
@@ -71,7 +71,7 @@ void NPShell::execute(string commandRaw, MultiProcServer &server, int fd) {
 
         // Filter buildin commands
         if (BuildinCommand::isBuildinCommand(command)) {
-            BuildinCommand::execute(*this, server, fd, command, args);
+            BuildinCommand::execute(*this, server, pid, fd, command, args);
 
             pipeManager.newSession();
             continue;
@@ -119,7 +119,7 @@ void NPShell::execute(string commandRaw, MultiProcServer &server, int fd) {
                 if (server.userManager.getUserById(toUserId) == nullptr) {
                     cerr << "*** Error: user #" << toUserId << " does not exist yet. ***" << endl;
                 } else {
-                    User *me = server.userManager.getUserByFd(fd);
+                    User *me = server.userManager.getUserByPid(pid);
                     User *toUser = server.userManager.getUserById(toUserId);
                     if (!pipeManager.addUserPipe(me->id, toUserId)) {
                         cerr << "*** Error: the pipe #" << me->id << "->#" << toUserId << " already exists. ***"
@@ -149,7 +149,7 @@ void NPShell::execute(string commandRaw, MultiProcServer &server, int fd) {
                     cerr << "*** Error: user #" << fromUserId << " does not exist yet. ***" << endl;
                 } else {
                     User *fromUser = server.userManager.getUserById(fromUserId);
-                    User *me = server.userManager.getUserByFd(fd);
+                    User *me = server.userManager.getUserByPid(pid);
 
                     if (!pipeManager.loadUserPipe(fromUserId, me->id)) {
                         cerr << "*** Error: the pipe #" << fromUserId << "->#" << me->id << " does not exist yet. ***"
@@ -199,7 +199,7 @@ void NPShell::execute(string commandRaw, MultiProcServer &server, int fd) {
         }
 
         if (doubleUserPipeFlag) {
-            User *me = server.userManager.getUserByFd(fd);
+            User *me = server.userManager.getUserByPid(pid);
             User *fromUser = server.userManager.getUserById(fromUserId);
             User *toUser = server.userManager.getUserById(toUserId);
 

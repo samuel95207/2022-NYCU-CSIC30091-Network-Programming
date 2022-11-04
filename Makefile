@@ -11,11 +11,9 @@ np_single_proc:
 	@$(MAKE) -C src/np_single_proc
 	@cp src/np_single_proc/np_single_proc ./np_single_proc
 
-np_single_proc:
+np_multi_proc:
 	@$(MAKE) -C src/np_multi_proc
 	@cp src/np_multi_proc/np_multi_proc ./np_multi_proc
-
-np_multi_proc:
 
 commands: create_working_dir noop number removetag removetag0 ls cat
 
@@ -61,10 +59,10 @@ run1:
 	@$(MAKE) run -C src/np_simple
 
 run2:
-	@$(MAKE) run -C src/np_simple
+	@$(MAKE) run -C src/np_single_proc
 
 run3:
-	@$(MAKE) run -C src/np_simple
+	@$(MAKE) run -C src/np_multi_proc
 
 
 test1: np_simple

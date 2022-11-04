@@ -24,7 +24,7 @@ class NPShell {
 
    public:
     NPShell();
-    void execute(std::string commandRaw, MultiProcServer &server, int fd);
+    void execute(std::string commandRaw, MultiProcServer &server, int pid, int fd);
 
     bool getExit();
 

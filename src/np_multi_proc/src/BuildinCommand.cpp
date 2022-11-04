@@ -23,24 +23,24 @@ unordered_map<string, BuildinCommandFunction> BuildinCommand::commands = {
 
 bool BuildinCommand::isBuildinCommand(string command) { return commands.find(command) != commands.end(); }
 
-bool BuildinCommand::execute(NPShell& shell, MultiProcServer& server, int fd, const string& command,
+bool BuildinCommand::execute(NPShell& shell, MultiProcServer& server, int pid, int fd, const string& command,
                              const vector<string>& args) {
     auto commandPairPtr = commands.find(command);
     if (commandPairPtr == commands.end()) {
         return false;
     }
     auto commandFunc = commandPairPtr->second;
-    return commandFunc(shell, server, fd, command, args);
+    return commandFunc(shell, server, pid, fd, command, args);
 }
 
 
-bool BuildinCommand::exitCommand(NPShell& shell, MultiProcServer& server, int fd, const string& command,
+bool BuildinCommand::exitCommand(NPShell& shell, MultiProcServer& server, int pid, int fd, const string& command,
                                  const vector<string>& args) {
     shell.setExit();
     return true;
 }
 
-bool BuildinCommand::printenvCommand(NPShell& shell, MultiProcServer& server, int fd, const string& command,
+bool BuildinCommand::printenvCommand(NPShell& shell, MultiProcServer& server, int pid, int fd, const string& command,
                                      const vector<string>& args) {
     if (args.size() < 1) {
         return false;
@@ -51,7 +51,7 @@ bool BuildinCommand::printenvCommand(NPShell& shell, MultiProcServer& server, in
     return true;
 }
 
-bool BuildinCommand::setenvCommand(NPShell& shell, MultiProcServer& server, int fd, const string& command,
+bool BuildinCommand::setenvCommand(NPShell& shell, MultiProcServer& server, int pid, int fd, const string& command,
                                    const vector<string>& args) {
     string value = "";
     if (args.size() < 1) {
@@ -65,26 +65,23 @@ bool BuildinCommand::setenvCommand(NPShell& shell, MultiProcServer& server, int 
 }
 
 
-bool BuildinCommand::whoCommand(NPShell& shell, MultiProcServer& server, int fd, const string& command,
+bool BuildinCommand::whoCommand(NPShell& shell, MultiProcServer& server, int pid, int fd, const string& command,
                                 const vector<string>& args) {
     cout << "<ID>\t<nickname>\t<IP:port>\t<indicate me>" << endl;
-
-    User* me = server.userManager.getUserByFd(fd);
+    User* me = server.userManager.getUserByPid(pid);
     for (auto idUserPair : server.userManager.getIdUserMap()) {
         User* user = idUserPair.second;
-        string ipString = string(inet_ntoa(user->ipAddr.sin_addr)) + ":" + to_string((int)ntohs(user->ipAddr.sin_port));
-
-        cout << user->id << "\t" << (user->name == "" ? "(no name)" : user->name) << "\t" << ipString
-             << (user == me ? "\t<-me" : "") << endl;
+        cout << user->id << "\t" << (user->name == "" ? "(no name)" : user->name) << "\t" << user->ipAddr
+             << (user->id == me->id ? "\t<-me" : "") << endl;
     }
 
     return true;
 }
 
 
-bool BuildinCommand::yellCommand(NPShell& shell, MultiProcServer& server, int fd, const string& command,
+bool BuildinCommand::yellCommand(NPShell& shell, MultiProcServer& server, int pid, int fd, const string& command,
                                  const vector<string>& args) {
-    User* me = server.userManager.getUserByFd(fd);
+    User* me = server.userManager.getUserByPid(pid);
     string message = "*** " + (me->name == "" ? "(no name)" : me->name) + " yelled ***: " + args[0] + "\n";
     server.broadcast(message);
 
@@ -92,32 +89,33 @@ bool BuildinCommand::yellCommand(NPShell& shell, MultiProcServer& server, int fd
 }
 
 
-bool BuildinCommand::nameCommand(NPShell& shell, MultiProcServer& server, int fd, const string& command,
+bool BuildinCommand::nameCommand(NPShell& shell, MultiProcServer& server, int pid, int fd, const string& command,
                                  const vector<string>& args) {
-    User* me = server.userManager.getUserByFd(fd);
+    User* me = server.userManager.getUserByPid(pid);
     string name = args[0];
 
     if (name == "") {
         cerr << "Error args1 cannot be empty" << endl;
         return false;
     }
+
+    cout << me->id << endl;
     if (!server.userManager.setNameById(me->id, name)) {
         cerr << "*** User '" << name << "' already exists. ***" << endl;
         return false;
     }
 
     me->name = name;
-    string ipString = string(inet_ntoa(me->ipAddr.sin_addr)) + ":" + to_string((int)ntohs(me->ipAddr.sin_port));
-    string message = "*** User from " + ipString + " is named '" + me->name + "'. ***\n";
+    string message = "*** User from " + me->ipAddr + " is named '" + me->name + "'. ***\n";
     server.broadcast(message);
 
     return true;
 }
 
 
-bool BuildinCommand::tellCommand(NPShell& shell, MultiProcServer& server, int fd, const string& command,
+bool BuildinCommand::tellCommand(NPShell& shell, MultiProcServer& server, int pid, int fd, const string& command,
                                  const vector<string>& args) {
-    User* me = server.userManager.getUserByFd(fd);
+    User* me = server.userManager.getUserByPid(pid);
 
     int toId = stoi(args[0]);
     string rawMessage = args[1];

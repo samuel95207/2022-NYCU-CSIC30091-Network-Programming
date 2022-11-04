@@ -24,7 +24,11 @@
 using namespace std;
 
 
-MultiProcServer::MultiProcServer(int port) : port(port) { signal(SIGCHLD, MultiProcServer::childSignalHandler); }
+MultiProcServer::MultiProcServer(int port) : port(port) {
+    signal(SIGCHLD, MultiProcServer::childSignalHandler);
+    signal(SIGINT, MultiProcServer::intSignalHandler);
+    userManager.setupSharedMemory();
+}
 
 void MultiProcServer::run() {
     sockaddr_in clientAddr;
@@ -45,8 +49,8 @@ void MultiProcServer::run() {
             if (errno == EINTR) {
                 continue;
             }
-            // cerr << "accept: " << sys_errlist[errno] << endl;
-            return;
+            // cerr << "accept: " << sys_errlist[errno] << " " << errno << endl;
+            continue;
         }
 
         pid_t pid = fork();
@@ -60,8 +64,15 @@ void MultiProcServer::run() {
             // Child Process
             close(masterSocket);
 
+            pid = getpid();
+
             cout << "New user connected from " << inet_ntoa(clientAddr.sin_addr) << ":"
                  << (int)ntohs(clientAddr.sin_port) << endl;
+
+
+
+
+            newClient(pid, slaveSocket, clientAddr);
 
 
             int savedStdout = dup(fileno(stdout));
@@ -72,11 +83,13 @@ void MultiProcServer::run() {
             dup2(slaveSocket, fileno(stdin));
 
 
-            NPShell shell = NPShell();
             string commandRaw;
-            cout << NPShell::getSymbol();
             while (getline(cin, commandRaw)) {
-                shell.execute(commandRaw, *this, slaveSocket);
+                // cout << pid << " " << slaveSocket << endl;
+                shell.execute(commandRaw, *this, pid, slaveSocket);
+                if (shell.getExit()) {
+                    break;
+                }
                 cout << NPShell::getSymbol();
             }
 
@@ -88,6 +101,8 @@ void MultiProcServer::run() {
             close(savedStdout);
             close(savedStderr);
             close(savedStdin);
+
+            closeClient(pid, slaveSocket);
 
             close(slaveSocket);
         }
@@ -199,109 +214,100 @@ void MultiProcServer::run() {
 
 
 
-void MultiProcServer::newClient(int fd, sockaddr_in ipAddr) {
-//     FD_SET(fd, &activeFds);
+void MultiProcServer::newClient(int pid, int fd, sockaddr_in ipAddr) {
+    BuildinCommand::execute(shell, *this, pid, fd, "setenv", {vector<string>({"PATH", "bin:."})});
 
-//     npshellMap[fd] = new NPShell();
-//     BuildinCommand::execute(*npshellMap[fd], *this, fd, "setenv", {vector<string>({"PATH", "bin:."})});
+    int savedStdout = dup(fileno(stdout));
+    int savedStderr = dup(fileno(stderr));
+    dup2(fd, fileno(stdout));
+    dup2(fd, fileno(stderr));
 
+    User *user = userManager.addUser(pid, fd, ipAddr);
 
-//     int savedStdout = dup(fileno(stdout));
-//     int savedStderr = dup(fileno(stderr));
-//     dup2(fd, fileno(stdout));
-//     dup2(fd, fileno(stderr));
+    cout << "****************************************" << endl;
+    cout << "** Welcome to the information server. **" << endl;
+    cout << "****************************************" << endl;
 
-//     User *user = userManager.addUser(fd, ipAddr);
-
-//     cout << "****************************************" << endl;
-//     cout << "** Welcome to the information server. **" << endl;
-//     cout << "****************************************" << endl;
-
-//     string ipString = string(inet_ntoa(user->ipAddr.sin_addr)) + ":" +
-//     to_string((int)ntohs(user->ipAddr.sin_port)); broadcast("*** User '" + (user->name == "" ? "(no name)" :
-//     user->name) + "' entered from " + ipString + ".
-//     ***\n");
+    broadcast("*** User '" + (user->name == "" ? "(no name)" : user->name) + "' entered from " + user->ipAddr +
+              ".***\n");
 
 
 
-//     cout << NPShell::getSymbol();
-//     cout.flush();
+    cout << NPShell::getSymbol();
+    cout.flush();
 
 
-//     dup2(savedStdout, fileno(stdout));
-//     dup2(savedStderr, fileno(stderr));
-//     close(savedStdout);
-//     close(savedStderr);
+    dup2(savedStdout, fileno(stdout));
+    dup2(savedStderr, fileno(stderr));
+    close(savedStdout);
+    close(savedStderr);
 }
 
-void MultiProcServer::closeClient(int fd) {
-//     close(fd);
-//     FD_CLR(fd, &activeFds);
+void MultiProcServer::closeClient(int pid, int fd) {
+    User *user = userManager.getUserByPid(pid);
 
-//     User *user = userManager.getUserByFd(fd);
-//     broadcast("*** User '" + (user->name == "" ? "(no name)" : user->name) + "' left. ***\n");
+    broadcast("*** User '" + (user->name == "" ? "(no name)" : user->name) + "' left. ***\n");
 
+    PipeManager::closeUserPipe(user->id);
 
-//     PipeManager::closeUserPipe(user->id);
+    cout << "User " << user->ipAddr << " left." << endl;
 
-//     delete npshellMap[fd];
-//     npshellMap.erase(fd);
-
-//     cout << "User " << inet_ntoa(user->ipAddr.sin_addr) << ":" << (int)ntohs(user->ipAddr.sin_port) << " left."
-//     << endl;
-
-//     userManager.removeUserByFd(fd);
-
-//     close(fd);
+    userManager.removeUserByPid(pid);
 }
 
 
 void MultiProcServer::broadcast(string message) {
-//     for (int fd = 0; fd < numFds; fd++) {
-//         if (fd == masterSocket || !FD_ISSET(fd, &activeFds)) {
-//             continue;
-//         }
+    //     for (int fd = 0; fd < numFds; fd++) {
+    //         if (fd == masterSocket || !FD_ISSET(fd, &activeFds)) {
+    //             continue;
+    //         }
 
-//         int savedStdout = dup(fileno(stdout));
-//         int savedStderr = dup(fileno(stderr));
-//         dup2(fd, fileno(stdout));
-//         dup2(fd, fileno(stderr));
-
-
-//         cout << message;
-//         cout.flush();
+    //         int savedStdout = dup(fileno(stdout));
+    //         int savedStderr = dup(fileno(stderr));
+    //         dup2(fd, fileno(stdout));
+    //         dup2(fd, fileno(stderr));
 
 
-//         dup2(savedStdout, fileno(stdout));
-//         dup2(savedStderr, fileno(stderr));
-//         close(savedStdout);
-//         close(savedStderr);
-//     }
+    //         cout << message;
+    //         cout.flush();
+
+
+    //         dup2(savedStdout, fileno(stdout));
+    //         dup2(savedStderr, fileno(stderr));
+    //         close(savedStdout);
+    //         close(savedStderr);
+    //     }
 }
 
 void MultiProcServer::sendDirectMessage(int id, std::string message) {
-//     User *user = userManager.getUserById(id);
-//     if (user == nullptr) {
-//         return;
-//     }
+    //     User *user = userManager.getUserById(id);
+    //     if (user == nullptr) {
+    //         return;
+    //     }
 
-//     int fd = user->fd;
+    //     int fd = user->fd;
 
-//     int savedStdout = dup(fileno(stdout));
-//     int savedStderr = dup(fileno(stderr));
-//     dup2(fd, fileno(stdout));
-//     dup2(fd, fileno(stderr));
+    //     int savedStdout = dup(fileno(stdout));
+    //     int savedStderr = dup(fileno(stderr));
+    //     dup2(fd, fileno(stdout));
+    //     dup2(fd, fileno(stderr));
 
-//     cout << message;
+    //     cout << message;
 
-//     dup2(savedStdout, fileno(stdout));
-//     dup2(savedStderr, fileno(stderr));
-//     close(savedStdout);
-//     close(savedStderr);
+    //     dup2(savedStdout, fileno(stdout));
+    //     dup2(savedStderr, fileno(stderr));
+    //     close(savedStdout);
+    //     close(savedStderr);
 }
 
 void MultiProcServer::childSignalHandler(int signum) {
     int status;
     while (wait3(&status, WNOHANG, (rusage *)0) >= 0) {
     }
+}
+
+void MultiProcServer::intSignalHandler(int signum) {
+    UserManager::closedSharedMemory();
+    cout << "Shared Memory removed." << endl;
+    exit(0);
 }

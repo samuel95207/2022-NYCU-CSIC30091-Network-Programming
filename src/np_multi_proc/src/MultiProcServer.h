@@ -33,6 +33,8 @@ class MultiProcServer {
     int port;
     int masterSocket;
 
+    NPShell shell;
+
 
     UserManager userManager;
 
@@ -46,11 +48,13 @@ class MultiProcServer {
     void run();
 
     static void childSignalHandler(int signum);
+    static void intSignalHandler(int signum);
+
 
 
    private:
-    void newClient(int fd, sockaddr_in ipAddr);
-    void closeClient(int fd);
+    void newClient(int pid, int fd, sockaddr_in ipAddr);
+    void closeClient(int pid, int fd);
 
     void broadcast(std::string message);
     void sendDirectMessage(int id, std::string message);
