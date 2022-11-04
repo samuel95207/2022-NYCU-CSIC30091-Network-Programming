@@ -49,8 +49,8 @@ void MultiProcServer::run() {
             if (errno == EINTR) {
                 continue;
             }
-            // cerr << "accept: " << sys_errlist[errno] << " " << errno << endl;
-            continue;
+            cerr << "accept: " << sys_errlist[errno] << " " << errno << endl;
+            return;
         }
 
         pid_t pid = fork();
@@ -105,6 +105,9 @@ void MultiProcServer::run() {
             closeClient(pid, slaveSocket);
 
             close(slaveSocket);
+
+            exit(0);
+
         }
     }
 
