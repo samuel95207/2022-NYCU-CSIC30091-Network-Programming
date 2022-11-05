@@ -1,9 +1,9 @@
-
 #include <fcntl.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/un.h>
 
 #include <cstdio>
 #include <cstdlib>
@@ -33,7 +33,7 @@ UserManager::UserManager() {}
 
 User* UserManager::addUser(int pid, int fd, sockaddr_in ipAddr) {
     sem_wait(sem);
-    readFromSharedMemory();
+    readFromSharedMemory(false);
 
     string ipString = string(inet_ntoa(ipAddr.sin_addr)) + ":" + to_string((int)ntohs(ipAddr.sin_port));
 
@@ -48,7 +48,7 @@ User* UserManager::addUser(int pid, int fd, sockaddr_in ipAddr) {
     idUserMap[newUser->id] = newUser;
     pidUserMap[pid] = newUser;
 
-    writeToSharedMemory();
+    writeToSharedMemory(false);
     sem_signal(sem);
 
     return newUser;
@@ -56,7 +56,7 @@ User* UserManager::addUser(int pid, int fd, sockaddr_in ipAddr) {
 
 void UserManager::removeUserById(int id) {
     sem_wait(sem);
-    readFromSharedMemory();
+    readFromSharedMemory(false);
 
     auto result = idUserMap.find(id);
     if (result == idUserMap.end()) {
@@ -69,13 +69,13 @@ void UserManager::removeUserById(int id) {
     }
     delete result->second;
 
-    writeToSharedMemory();
+    writeToSharedMemory(false);
     sem_signal(sem);
 }
 
 void UserManager::removeUserByPid(int pid) {
     sem_wait(sem);
-    readFromSharedMemory();
+    readFromSharedMemory(false);
 
     auto result = pidUserMap.find(pid);
     if (result == pidUserMap.end()) {
@@ -88,18 +88,13 @@ void UserManager::removeUserByPid(int pid) {
     }
     delete result->second;
 
-    writeToSharedMemory();
+    writeToSharedMemory(false);
     sem_signal(sem);
 }
 
 User* UserManager::getUserById(int id, bool lock) {
-    if (lock) {
-        sem_wait(sem);
-    }
-    readFromSharedMemory();
-    if (lock) {
-        sem_signal(sem);
-    }
+    readFromSharedMemory(lock);
+
 
     auto result = idUserMap.find(id);
     if (result == idUserMap.end()) {
@@ -109,14 +104,7 @@ User* UserManager::getUserById(int id, bool lock) {
 }
 
 User* UserManager::getUserByPid(int pid, bool lock) {
-    if (lock) {
-        sem_wait(sem);
-    }
-    readFromSharedMemory();
-    if (lock) {
-        sem_signal(sem);
-    }
-
+    readFromSharedMemory(lock);
 
     auto result = pidUserMap.find(pid);
     if (result == idUserMap.end()) {
@@ -126,14 +114,8 @@ User* UserManager::getUserByPid(int pid, bool lock) {
 }
 
 User* UserManager::getUserByName(string name, bool lock) {
-    if (lock) {
-        sem_wait(sem);
-    }
-    readFromSharedMemory();
-    if (lock) {
-        sem_signal(sem);
-    }
-    
+    readFromSharedMemory(lock);
+
     if (name == "") {
         return nullptr;
     }
@@ -145,10 +127,13 @@ User* UserManager::getUserByName(string name, bool lock) {
 }
 
 
+std::map<int, User*> UserManager::getIdUserMap() { return idUserMap; }
+
+
 
 bool UserManager::setNameById(int id, string name) {
     sem_wait(sem);
-    readFromSharedMemory();
+    readFromSharedMemory(false);
 
     User* user = getUserByName(name, false);
     if (user != nullptr || name == "") {
@@ -162,7 +147,7 @@ bool UserManager::setNameById(int id, string name) {
     nameUserMap[name] = user;
 
 
-    writeToSharedMemory();
+    writeToSharedMemory(false);
     sem_signal(sem);
 
     return true;
@@ -184,20 +169,25 @@ bool UserManager::setupSharedMemory() {
 
     sem_signal(sem);
 
-    cout << "Setup shm" << endl;
+    // cout << "Setup shm" << endl;
 
-    sem_wait(sem);
+
     writeToSharedMemory();
-    sem_signal(sem);
 
 
     return true;
 }
 
-bool UserManager::readFromSharedMemory() {
+bool UserManager::readFromSharedMemory(bool lock) {
+    if (lock) {
+        sem_wait(sem);
+    }
     shmBuf = (char*)shmat(shmid, (char*)0, 0);
     if (shmBuf == (void*)-1) {
         cerr << "shmat() error!" << endl;
+        if (lock) {
+            sem_signal(sem);
+        }
         return false;
     }
 
@@ -214,7 +204,7 @@ bool UserManager::readFromSharedMemory() {
     pidUserMap.clear();
     nameUserMap.clear();
 
-    cout << "Read from shm: " << endl;
+    // cout << "Read from shm: " << endl;
     // cout << shmBuf;
 
 
@@ -234,7 +224,7 @@ bool UserManager::readFromSharedMemory() {
             name = "";
         }
 
-        cout << "|" << id << "|" << pid << "|" << fd << "|" << ipAddr << "|" << name << "|" << endl;
+        // cout << "|" << id << "|" << pid << "|" << fd << "|" << ipAddr << "|" << name << "|" << endl;
 
         User* newUser = new User();
         newUser->id = id;
@@ -255,16 +245,29 @@ bool UserManager::readFromSharedMemory() {
 
     if (shmdt(shmBuf) < 0) {
         cerr << "shdt() error!" << endl;
+        if (lock) {
+            sem_signal(sem);
+        }
         return false;
     }
 
+    if (lock) {
+        sem_signal(sem);
+    }
     return true;
 }
 
-bool UserManager::writeToSharedMemory() {
+bool UserManager::writeToSharedMemory(bool lock) {
+    if (lock) {
+        sem_wait(sem);
+    }
+
     shmBuf = (char*)shmat(shmid, (char*)0, 0);
     if (shmBuf == (void*)-1) {
         cerr << "shmat() error!" << endl;
+        if (lock) {
+            sem_signal(sem);
+        }
         return false;
     }
 
@@ -274,16 +277,23 @@ bool UserManager::writeToSharedMemory() {
         User* user = idUserPair.second;
         oss << user->id << " " << user->pid << " " << user->fd << " " << user->ipAddr << " " << user->name << endl;
     }
-    cout << "Write to shm: " << endl;
-    cout << oss.str();
+    // cout << "Write to shm: " << endl;
+    // cout << oss.str();
+
     strcpy(shmBuf, oss.str().c_str());
 
 
     if (shmdt(shmBuf) < 0) {
         cerr << "shdt() error!" << endl;
+        if (lock) {
+            sem_signal(sem);
+        }
         return false;
     }
 
+    if (lock) {
+        sem_signal(sem);
+    }
     return true;
 }
 

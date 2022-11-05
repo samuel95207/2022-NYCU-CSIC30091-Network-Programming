@@ -25,6 +25,11 @@
 #include "BuildinCommand.h"
 #endif
 
+#ifndef _MESSAGE_MANAGER_H_
+#define _MESSAGE_MANAGER_H_
+#include "MessageManager.h"
+#endif
+
 class BuildinCommand;
 
 class MultiProcServer {
@@ -37,6 +42,7 @@ class MultiProcServer {
 
 
     UserManager userManager;
+    MessageManager messageManager;
 
 
     friend class BuildinCommand;
@@ -56,6 +62,6 @@ class MultiProcServer {
     void newClient(int pid, int fd, sockaddr_in ipAddr);
     void closeClient(int pid, int fd);
 
-    void broadcast(std::string message);
+    void broadcast(std::string message, bool includeSelf = true);
     void sendDirectMessage(int id, std::string message);
 };

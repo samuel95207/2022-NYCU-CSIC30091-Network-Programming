@@ -48,17 +48,20 @@ class UserManager {
     User* getUserById(int id, bool lock = true);
     User* getUserByPid(int pid, bool lock = true);
     User* getUserByName(std::string name, bool lock = true);
+    std::map<int, User*> getIdUserMap();
+
     bool setNameById(int id, std::string name);
 
 
     bool setupSharedMemory();
     static void closedSharedMemory();
 
+    bool readFromSharedMemory(bool lock = true);
+
     friend class BuildinCommand;
 
    private:
-    bool readFromSharedMemory();
-    bool writeToSharedMemory();
+    bool writeToSharedMemory(bool lock = true);
 
 
     int idMin();

@@ -195,6 +195,7 @@ void NPShell::execute(string commandRaw, MultiProcServer &server, int pid, int f
             // To console
             executeForkedCommand(command, args, PipeMode::CONSOLE_OUTPUT);
 
+
             pipeManager.newSession();
         }
 
@@ -240,6 +241,8 @@ void NPShell::execute(string commandRaw, MultiProcServer &server, int pid, int f
         }
     }
 
+
+
     resetEnv();
 }
 
@@ -272,6 +275,7 @@ bool NPShell::executeForkedCommand(const std::string &command, const std::vector
         if (pipeMode == PipeMode::CONSOLE_OUTPUT || pipeMode == PipeMode::FILE_OUTPUT ||
             pipeMode2 == PipeMode::CONSOLE_OUTPUT || pipeMode2 == PipeMode::FILE_OUTPUT) {
             int status;
+
             waitpid(pid, &status, 0);
         }
     } else {
