@@ -122,14 +122,19 @@ void NPShell::execute(string commandRaw, MultiProcServer &server, int pid, int f
                     User me = server.userManager.getUserByPid(pid);
                     User toUser = server.userManager.getUserById(toUserId);
                     if (!pipeManager.addUserPipe(me.id, toUserId)) {
-                        cerr << "*** Error: the pipe #" << me.id << "->#" << toUserId << " already exists. ***"
-                             << endl;
+                        cerr << "*** Error: the pipe #" << me.id << "->#" << toUserId << " already exists. ***" << endl;
                     } else {
-                        string message = "*** " + (me.name == "" ? "(no name)" : me.name) + " (#" +
-                                         to_string(me.id) + ") just piped '" + commandRaw + "' to " +
-                                         (toUser.name == "" ? "(no name)" : toUser.name) + " (#" +
-                                         to_string(toUserId) + ") ***";
+                        string message = "*** " + (me.name == "" ? "(no name)" : me.name) + " (#" + to_string(me.id) +
+                                         ") just piped '" + commandRaw + "' to " +
+                                         (toUser.name == "" ? "(no name)" : toUser.name) + " (#" + to_string(toUserId) +
+                                         ") ***";
                         server.broadcast(message);
+
+                                                Message icpMessage;
+                        icpMessage.pid = me.pid;
+                        icpMessage.type = "openFromUserPipe";
+                        icpMessage.value = to_string(me.id) + "_" + to_string(toUser.id);
+                        MessageManager::addMessage(icpMessage);
                     }
                 }
 
@@ -155,11 +160,16 @@ void NPShell::execute(string commandRaw, MultiProcServer &server, int pid, int f
                         cerr << "*** Error: the pipe #" << fromUserId << "->#" << me.id << " does not exist yet. ***"
                              << endl;
                     } else {
-                        string message = "*** " + (me.name == "" ? "(no name)" : me.name) + " (#" +
-                                         to_string(me.id) + ") just received from " +
-                                         (fromUser.name == "" ? "(no name)" : fromUser.name) + " (#" +
-                                         to_string(fromUserId) + ") by '" + commandRaw + "' ***";
+                        string message = "*** " + (me.name == "" ? "(no name)" : me.name) + " (#" + to_string(me.id) +
+                                         ") just received from " + (fromUser.name == "" ? "(no name)" : fromUser.name) +
+                                         " (#" + to_string(fromUserId) + ") by '" + commandRaw + "' ***";
                         server.broadcast(message);
+
+                        Message icpMessage;
+                        icpMessage.pid = fromUser.pid;
+                        icpMessage.type = "closeFromUserPipe";
+                        icpMessage.value = to_string(fromUser.id) + "_" + to_string(me.id);
+                        MessageManager::addMessage(icpMessage);
                     }
                 }
 
@@ -185,6 +195,10 @@ void NPShell::execute(string commandRaw, MultiProcServer &server, int pid, int f
                     sscanf(secondOperator.c_str(), "!%d", &count);
                     pipeManager.addNumberedPipe(count);
                 }
+
+
+
+
                 executeForkedCommand(command, args, PipeMode::USER_PIPE_IN, pipeMode2, filename);
 
                 if (pipeMode2 != PipeMode::NORMAL_PIPE) {
@@ -233,6 +247,12 @@ void NPShell::execute(string commandRaw, MultiProcServer &server, int pid, int f
                     server.broadcast(message);
                 }
             }
+
+            Message message;
+            message.pid = server.userManager.getUserById(fromUserId).pid;
+            message.type = "closeFromUserPipe";
+            message.value = to_string(fromUserId) + "_" + to_string(toUserId);
+            MessageManager::addMessage(message);
 
             executeForkedCommand(command, args, PipeMode::USER_PIPE_BOTH);
             pipeManager.newSession();

@@ -10,27 +10,19 @@
 #include <string>
 #include <unordered_map>
 
-#ifndef _NPSHELL_H_
-#define _NPSHELL_H_
-#include "NPShell.h"
-#endif
 
 #ifndef _USER_MANAGER_H_
 #define _USER_MANAGER_H_
 #include "UserManager.h"
 #endif
 
-#ifndef _BUILDIN_COMMAND_H_
-#define _BUILDIN_COMMAND_H_
-#include "BuildinCommand.h"
-#endif
-
-#ifndef _MESSAGE_MANAGER_H_
-#define _MESSAGE_MANAGER_H_
-#include "MessageManager.h"
+#ifndef _NPSHELL_H_
+#define _NPSHELL_H_
+#include "NPShell.h"
 #endif
 
 class BuildinCommand;
+class MessageManager;
 
 class MultiProcServer {
     const int QUEUE_LENGTH = 1024;
@@ -47,6 +39,7 @@ class MultiProcServer {
 
     friend class BuildinCommand;
     friend class NPShell;
+    friend class MessageManager;
 
 
    public:

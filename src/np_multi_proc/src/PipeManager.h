@@ -30,13 +30,14 @@ class PipeManager {
     int currentNumberedPipe[2];
     int newNumberedPipe[2];
 
+    int dummyReadFd;
     int currentUserPipe;
     int newUserPipe;
 
     int count = 0;
     std::unordered_map<int, std::pair<int, int>> countPipeMap;
 
-    static std::map<std::pair<int, int>, std::pair<int, int>> userPipeMap;
+    std::map<std::pair<int, int>, int> userPipeMap;
 
 
    public:
@@ -50,6 +51,9 @@ class PipeManager {
 
     bool addUserPipe(int fromId, int toId);
     bool loadUserPipe(int fromId, int toId);
+    bool openFromUserPipe(int fromId, int toId);
+    bool closeFromUserPipe(int fromId, int toId);
+
     static bool closeUserPipe(int id);
     static bool closeAllPipe();
 

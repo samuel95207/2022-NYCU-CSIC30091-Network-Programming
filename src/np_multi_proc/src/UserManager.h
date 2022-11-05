@@ -33,36 +33,32 @@ class UserManager {
     static char* shmBuf;
     static int sem;
 
-
-    std::map<int, User> idUserMap;
-    std::map<int, User> pidUserMap;
-    std::map<std::string, User> nameUserMap;
+    static std::map<int, User> idUserMap;
+    static std::map<int, User> pidUserMap;
+    static std::map<std::string, User> nameUserMap;
 
    public:
     UserManager();
 
-    User addUser(int pid, int fd, sockaddr_in ipAddr);
-    void removeUserById(int id);
+    static User addUser(int pid, int fd, sockaddr_in ipAddr);
+    static void removeUserById(int id);
     void removeUserByPid(int pid);
 
-    User getUserById(int id, bool lock = true);
-    User getUserByPid(int pid, bool lock = true);
-    User getUserByName(std::string name, bool lock = true);
-    std::map<int, User> getIdUserMap();
+    static User getUserById(int id, bool lock = true);
+    static User getUserByPid(int pid, bool lock = true);
+    static User getUserByName(std::string name, bool lock = true);
+    static std::map<int, User> getIdUserMap();
 
-    bool setNameById(int id, std::string name);
+    static bool setNameById(int id, std::string name);
 
-
-    bool setupSharedMemory();
+    static bool setupSharedMemory();
     static void closedSharedMemory();
 
-    bool readFromSharedMemory(bool lock = true);
+    static bool readFromSharedMemory(bool lock = true);
+    static bool writeToSharedMemory(bool lock = true);
 
     friend class BuildinCommand;
 
    private:
-    bool writeToSharedMemory(bool lock = true);
-
-
-    int idMin();
+    static int idMin();
 };

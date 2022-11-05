@@ -1,8 +1,3 @@
-#ifndef _PIPE_MANAGER_H_
-#define _PIPE_MANAGER_H_
-#include "PipeManager.h"
-#endif
-
 #include <fcntl.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -14,11 +9,28 @@
 #include <cstdlib>
 #include <filesystem>
 #include <iostream>
+#include <string>
 #include <utility>
+
+#ifndef _PIPE_MANAGER_H_
+#define _PIPE_MANAGER_H_
+#include "PipeManager.h"
+#endif
+
+#ifndef _MESSAGE_MANAGER_H_
+#define _MESSAGE_MANAGER_H_
+#include "MessageManager.h"
+#endif
+
+#ifndef _USER_MANAGER_H_
+#define _USER_MANAGER_H_
+#include "UserManager.h"
+#endif
+
+
 
 using namespace std;
 
-map<pair<int, int>, pair<int, int>> PipeManager::userPipeMap;
 const string PipeManager::fifoPath = "./user_pipe";
 
 
@@ -114,6 +126,13 @@ bool PipeManager::parentPipeHandler(PipeMode pipeMode, PipeMode pipeMode2, std::
         close(currentPipe[WRITE]);
     }
 
+    if (pipeMode == PipeMode::USER_PIPE_OUT) {
+        close(dummyReadFd);
+        close(newUserPipe);
+        dummyReadFd = 0;
+        newUserPipe = 0;
+    }
+
     if (pipeMode == PipeMode::NORMAL_PIPE || pipeMode2 == PipeMode::NORMAL_PIPE) {
         currentPipe[READ] = newPipe[READ];
         currentPipe[WRITE] = newPipe[WRITE];
@@ -196,17 +215,15 @@ bool PipeManager::addNumberedPipe(int countIn) {
 }
 
 bool PipeManager::addUserPipe(int fromId, int toId) {
-    // pair<int, int> key = pair<int, int>(fromId, toId);
-
     string path = "./user_pipe/" + to_string(fromId) + "_" + to_string(toId);
 
     if (mknod(path.c_str(), S_IFIFO | FIFO_PERMS, 0) < 0) {
         // cerr << "mknod() error! " << strerror(errno) << " " << errno << endl;
         return false;
     }
-    int dummyfd = open(path.c_str(), O_RDONLY | O_NONBLOCK);
-    newUserPipe = open(path.c_str(), O_WRONLY | O_NONBLOCK);
-    if (newUserPipe < 0) {
+    dummyReadFd = open(path.c_str(), O_RDONLY | O_NONBLOCK);
+    newUserPipe = open(path.c_str(), O_WRONLY);
+    if (newUserPipe < 0 || dummyReadFd < 0) {
         cerr << "open() error! " << strerror(errno) << " " << errno << endl;
         return false;
     }
@@ -219,8 +236,9 @@ bool PipeManager::addUserPipe(int fromId, int toId) {
 bool PipeManager::loadUserPipe(int fromId, int toId) {
     string path = "./user_pipe/" + to_string(fromId) + "_" + to_string(toId);
 
-    currentUserPipe = open(path.c_str(), O_RDONLY | O_NONBLOCK);
-    if(currentUserPipe < 0){
+    currentUserPipe = open(path.c_str(), O_RDONLY);
+
+    if (currentUserPipe < 0) {
         return false;
     }
 
@@ -228,6 +246,34 @@ bool PipeManager::loadUserPipe(int fromId, int toId) {
 
     return true;
 }
+
+bool PipeManager::openFromUserPipe(int fromId, int toId) {
+    pair<int, int> key = pair<int, int>(fromId, toId);
+
+    string path = "./user_pipe/" + to_string(fromId) + "_" + to_string(toId);
+
+    int fromUserPipe = open(path.c_str(), O_WRONLY | O_NONBLOCK);
+    userPipeMap[key] = fromUserPipe;
+
+    return true;
+}
+
+
+bool PipeManager::closeFromUserPipe(int fromId, int toId) {
+    pair<int, int> key = pair<int, int>(fromId, toId);
+    auto entry = userPipeMap.find(key);
+    if (entry == userPipeMap.end()) {
+        return false;
+    }
+
+    int fromUserPipe = entry->second;
+    close(fromUserPipe);
+
+    userPipeMap.erase(key);
+
+    return true;
+}
+
 
 bool PipeManager::closeUserPipe(int id) {
     for (const auto& entry : std::filesystem::directory_iterator(fifoPath)) {
@@ -238,6 +284,12 @@ bool PipeManager::closeUserPipe(int id) {
         string id1 = filename.substr(0, filename.find("_"));
         string id2 = filename.substr(filename.find("_") + 1);
         if (id1 == to_string(id) || id2 == to_string(id)) {
+            Message message;
+            message.pid = UserManager::getUserById(id).pid;
+            message.type = "closeFromUserPipe";
+            message.value = id1 + "_" + id2;
+            MessageManager::addMessage(message);
+
             unlink(entry.path().c_str());
         }
     }

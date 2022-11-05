@@ -8,6 +8,16 @@
 #include "passivesock.h"
 #endif
 
+#ifndef _NPSHELL_H_
+#define _NPSHELL_H_
+#include "NPShell.h"
+#endif
+
+#ifndef _BUILDIN_COMMAND_H_
+#define _BUILDIN_COMMAND_H_
+#include "BuildinCommand.h"
+#endif
+
 #include <arpa/inet.h>
 #include <memory.h>
 #include <netinet/in.h>
@@ -50,7 +60,7 @@ void MultiProcServer::run() {
             if (errno == EINTR) {
                 continue;
             }
-            cerr << "accept: " << sys_errlist[errno] << " " << errno << endl;
+            cerr << "accept: " << strerror(errno) << " " << errno << endl;
             return;
         }
 
@@ -79,7 +89,7 @@ void MultiProcServer::run() {
 
             if (messageManagerPid > 0) {
                 cout << "New user connected from " << inet_ntoa(clientAddr.sin_addr) << ":"
-                     << (int)ntohs(clientAddr.sin_port) << endl;
+                     << (int)ntohs(clientAddr.sin_port) << " " << pid << endl;
 
                 newClient(pid, slaveSocket, clientAddr);
 
@@ -117,7 +127,7 @@ void MultiProcServer::run() {
 
                 exit(0);
             } else {
-                messageManager.run();
+                messageManager.run(*this);
                 cout << "messageManager end" << endl;
                 exit(0);
             }

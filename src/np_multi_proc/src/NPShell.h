@@ -7,6 +7,10 @@
 #include "PipeManager.h"
 #endif
 
+#ifndef _MESSAGE_MANAGER_H_
+#define _MESSAGE_MANAGER_H_
+#include "MessageManager.h"
+#endif
 
 class MultiProcServer;
 
@@ -21,6 +25,7 @@ class NPShell {
 
 
     friend class MultiProcServer;
+    friend class MessageManager;
 
    public:
     NPShell();

@@ -21,16 +21,24 @@
 #include "MessageManager.h"
 #endif
 
+#ifndef _MULTI_PROC_SERVER_H_
+#define _MULTI_PROC_SERVER_H_
+#include "MultiProcServer.h"
+#endif
+
 using namespace std;
 
 int MessageManager::shmid;
 char* MessageManager::shmBuf;
 int MessageManager::sem;
 
+deque<Message> MessageManager::messageQueue;
+
+
 MessageManager::MessageManager() {}
 
 
-void MessageManager::run() {
+void MessageManager::run(MultiProcServer& server) {
     while (true) {
         sem_wait(sem);
 
@@ -66,6 +74,14 @@ void MessageManager::run() {
                 exitFlag = true;
                 close(fd);
                 break;
+            } else if (message.type == "openFromUserPipe") {
+                string id1 = message.value.substr(0, message.value.find("_"));
+                string id2 = message.value.substr(message.value.find("_") + 1);
+                server.shell.pipeManager.openFromUserPipe(stoi(id1), stoi(id2));
+            } else if (message.type == "closeFromUserPipe") {
+                string id1 = message.value.substr(0, message.value.find("_"));
+                string id2 = message.value.substr(message.value.find("_") + 1);
+                server.shell.pipeManager.closeFromUserPipe(stoi(id1), stoi(id2));
             }
 
             idx++;

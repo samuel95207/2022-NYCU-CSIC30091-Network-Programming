@@ -28,6 +28,11 @@ int UserManager::shmid;
 char* UserManager::shmBuf;
 int UserManager::sem;
 
+map<int, User> UserManager::idUserMap;
+map<int, User> UserManager::pidUserMap;
+map<string, User> UserManager::nameUserMap;
+    
+
 UserManager::UserManager() {}
 
 
