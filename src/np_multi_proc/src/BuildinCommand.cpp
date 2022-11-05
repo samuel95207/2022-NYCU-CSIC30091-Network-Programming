@@ -83,7 +83,8 @@ bool BuildinCommand::yellCommand(NPShell& shell, MultiProcServer& server, int pi
                                  const vector<string>& args) {
     User me = server.userManager.getUserByPid(pid);
     string message = "*** " + (me.name == "" ? "(no name)" : me.name) + " yelled ***: " + args[0];
-    server.broadcast(message);
+    cout << message << endl;
+    server.broadcast(message, false);
 
     return true;
 }
@@ -108,7 +109,8 @@ bool BuildinCommand::nameCommand(NPShell& shell, MultiProcServer& server, int pi
 
     me.name = name;
     string message = "*** User from " + me.ipAddr + " is named '" + me.name + "'. ***";
-    server.broadcast(message);
+    cout << message << endl;
+    server.broadcast(message, false);
 
     return true;
 }
