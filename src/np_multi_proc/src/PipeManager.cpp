@@ -220,6 +220,9 @@ bool PipeManager::loadUserPipe(int fromId, int toId) {
     string path = "./user_pipe/" + to_string(fromId) + "_" + to_string(toId);
 
     currentUserPipe = open(path.c_str(), O_RDONLY | O_NONBLOCK);
+    if(currentUserPipe < 0){
+        return false;
+    }
 
     unlink(path.c_str());
 
