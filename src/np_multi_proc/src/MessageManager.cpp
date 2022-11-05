@@ -54,8 +54,7 @@ void MessageManager::run() {
                 dup2(fd, fileno(stderr));
 
 
-                cout << message.value;
-                cout.flush();
+                cout << message.value << endl;
 
 
                 dup2(savedStdout, fileno(stdout));
@@ -149,7 +148,6 @@ bool MessageManager::readFromSharedMemory(bool lock) {
 
     messageQueue.clear();
 
-    // cout << "Read from shm: " << endl;
     // cout << shmBuf;
 
 
@@ -158,6 +156,8 @@ bool MessageManager::readFromSharedMemory(bool lock) {
 
     string line;
     while (getline(iss, line)) {
+        cout << "Read from shm: " << endl;
+        cout << line << endl;
         istringstream lineIss;
         lineIss.str(line);
 

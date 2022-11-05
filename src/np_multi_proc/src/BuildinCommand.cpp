@@ -82,7 +82,7 @@ bool BuildinCommand::whoCommand(NPShell& shell, MultiProcServer& server, int pid
 bool BuildinCommand::yellCommand(NPShell& shell, MultiProcServer& server, int pid, int fd, const string& command,
                                  const vector<string>& args) {
     User* me = server.userManager.getUserByPid(pid);
-    string message = "*** " + (me->name == "" ? "(no name)" : me->name) + " yelled ***: " + args[0] + "\n";
+    string message = "*** " + (me->name == "" ? "(no name)" : me->name) + " yelled ***: " + args[0];
     server.broadcast(message);
 
     return true;
@@ -99,14 +99,14 @@ bool BuildinCommand::nameCommand(NPShell& shell, MultiProcServer& server, int pi
         return false;
     }
 
-    cout << me->id << endl;
+    // cout << me->id << endl;
     if (!server.userManager.setNameById(me->id, name)) {
         cerr << "*** User '" << name << "' already exists. ***" << endl;
         return false;
     }
 
     me->name = name;
-    string message = "*** User from " + me->ipAddr + " is named '" + me->name + "'. ***\n";
+    string message = "*** User from " + me->ipAddr + " is named '" + me->name + "'. ***";
     server.broadcast(message);
 
     return true;

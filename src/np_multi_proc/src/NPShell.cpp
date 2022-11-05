@@ -128,7 +128,7 @@ void NPShell::execute(string commandRaw, MultiProcServer &server, int pid, int f
                         string message = "*** " + (me->name == "" ? "(no name)" : me->name) + " (#" +
                                          to_string(me->id) + ") just piped '" + commandRaw + "' to " +
                                          (toUser->name == "" ? "(no name)" : toUser->name) + " (#" +
-                                         to_string(toUserId) + ") ***\n";
+                                         to_string(toUserId) + ") ***";
                         server.broadcast(message);
                     }
                 }
@@ -158,7 +158,7 @@ void NPShell::execute(string commandRaw, MultiProcServer &server, int pid, int f
                         string message = "*** " + (me->name == "" ? "(no name)" : me->name) + " (#" +
                                          to_string(me->id) + ") just received from " +
                                          (fromUser->name == "" ? "(no name)" : fromUser->name) + " (#" +
-                                         to_string(fromUserId) + ") by '" + commandRaw + "' ***\n";
+                                         to_string(fromUserId) + ") by '" + commandRaw + "' ***";
                         server.broadcast(message);
                     }
                 }
@@ -215,7 +215,7 @@ void NPShell::execute(string commandRaw, MultiProcServer &server, int pid, int f
                 } else {
                     string message = "*** " + (me->name == "" ? "(no name)" : me->name) + " (#" + to_string(me->id) +
                                      ") just received from " + (fromUser->name == "" ? "(no name)" : fromUser->name) +
-                                     " (#" + to_string(fromUserId) + ") by '" + commandRaw + "' ***\n";
+                                     " (#" + to_string(fromUserId) + ") by '" + commandRaw + "' ***";
                     server.broadcast(message);
                 }
             }
@@ -229,7 +229,7 @@ void NPShell::execute(string commandRaw, MultiProcServer &server, int pid, int f
                     string message = "*** " + (me->name == "" ? "(no name)" : me->name) + " (#" + to_string(me->id) +
                                      ") just piped '" + commandRaw + "' to " +
                                      (toUser->name == "" ? "(no name)" : toUser->name) + " (#" + to_string(toUserId) +
-                                     ") ***\n";
+                                     ") ***";
                     server.broadcast(message);
                 }
             }

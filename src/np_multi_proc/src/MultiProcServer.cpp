@@ -149,7 +149,7 @@ void MultiProcServer::newClient(int pid, int fd, sockaddr_in ipAddr) {
     cout << "****************************************" << endl;
     cout << broadcastMessage << endl;
 
-    broadcast(broadcastMessage + "\n", false);
+    broadcast(broadcastMessage, false);
 
 
 
@@ -166,7 +166,7 @@ void MultiProcServer::newClient(int pid, int fd, sockaddr_in ipAddr) {
 void MultiProcServer::closeClient(int pid, int fd) {
     User *user = userManager.getUserByPid(pid);
 
-    broadcast("*** User '" + (user->name == "" ? "(no name)" : user->name) + "' left. ***\n", false);
+    broadcast("*** User '" + (user->name == "" ? "(no name)" : user->name) + "' left. ***", false);
 
     PipeManager::closeUserPipe(user->id);
 
