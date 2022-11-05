@@ -31,21 +31,21 @@ int UserManager::sem;
 UserManager::UserManager() {}
 
 
-User* UserManager::addUser(int pid, int fd, sockaddr_in ipAddr) {
+User UserManager::addUser(int pid, int fd, sockaddr_in ipAddr) {
     sem_wait(sem);
     readFromSharedMemory(false);
 
     string ipString = string(inet_ntoa(ipAddr.sin_addr)) + ":" + to_string((int)ntohs(ipAddr.sin_port));
 
-    User* newUser = new User();
-    newUser->pid = pid;
-    newUser->name = "";
-    newUser->fd = fd;
-    newUser->ipAddr = ipString;
-    newUser->id = idMin();
+    User newUser;
+    newUser.pid = pid;
+    newUser.name = "";
+    newUser.fd = fd;
+    newUser.ipAddr = ipString;
+    newUser.id = idMin();
 
 
-    idUserMap[newUser->id] = newUser;
+    idUserMap[newUser.id] = newUser;
     pidUserMap[pid] = newUser;
 
     writeToSharedMemory(false);
@@ -60,14 +60,14 @@ void UserManager::removeUserById(int id) {
 
     auto result = idUserMap.find(id);
     if (result == idUserMap.end()) {
+        sem_signal(sem);
         return;
     }
     idUserMap.erase(id);
-    pidUserMap.erase(result->second->pid);
-    if (result->second->name != "") {
-        nameUserMap.erase(result->second->name);
+    pidUserMap.erase(result->second.pid);
+    if (result->second.name != "") {
+        nameUserMap.erase(result->second.name);
     }
-    delete result->second;
 
     writeToSharedMemory(false);
     sem_signal(sem);
@@ -79,72 +79,93 @@ void UserManager::removeUserByPid(int pid) {
 
     auto result = pidUserMap.find(pid);
     if (result == pidUserMap.end()) {
+        sem_signal(sem);
         return;
     }
-    idUserMap.erase(result->second->id);
+    idUserMap.erase(result->second.id);
     pidUserMap.erase(pid);
-    if (result->second->name != "") {
-        nameUserMap.erase(result->second->name);
+    if (result->second.name != "") {
+        nameUserMap.erase(result->second.name);
     }
-    delete result->second;
 
     writeToSharedMemory(false);
     sem_signal(sem);
 }
 
-User* UserManager::getUserById(int id, bool lock) {
+User UserManager::getUserById(int id, bool lock) {
     readFromSharedMemory(lock);
 
 
     auto result = idUserMap.find(id);
     if (result == idUserMap.end()) {
-        return nullptr;
+        User nullUser;
+        nullUser.pid = -1;
+        nullUser.id = -1;
+        nullUser.fd = -1;
+        return nullUser;
     }
     return result->second;
 }
 
-User* UserManager::getUserByPid(int pid, bool lock) {
+User UserManager::getUserByPid(int pid, bool lock) {
     readFromSharedMemory(lock);
 
     auto result = pidUserMap.find(pid);
     if (result == idUserMap.end()) {
-        return nullptr;
+        User nullUser;
+        nullUser.pid = -1;
+        nullUser.id = -1;
+        nullUser.fd = -1;
+        return nullUser;
     }
     return result->second;
 }
 
-User* UserManager::getUserByName(string name, bool lock) {
+User UserManager::getUserByName(string name, bool lock) {
     readFromSharedMemory(lock);
 
     if (name == "") {
-        return nullptr;
+        User nullUser;
+        nullUser.pid = -1;
+        nullUser.id = -1;
+        nullUser.fd = -1;
+        return nullUser;
     }
     auto result = nameUserMap.find(name);
     if (result == nameUserMap.end()) {
-        return nullptr;
+        User nullUser;
+        nullUser.pid = -1;
+        nullUser.id = -1;
+        nullUser.fd = -1;
+        return nullUser;
     }
     return result->second;
 }
 
 
-std::map<int, User*> UserManager::getIdUserMap() { return idUserMap; }
+std::map<int, User> UserManager::getIdUserMap() { return idUserMap; }
 
 
 
 bool UserManager::setNameById(int id, string name) {
     sem_wait(sem);
+
     readFromSharedMemory(false);
 
-    User* user = getUserByName(name, false);
-    if (user != nullptr || name == "") {
+    User user = getUserByName(name, false);
+    if (user.pid != -1 || name == "") {
+        sem_signal(sem);
         return false;
     }
 
     user = idUserMap[id];
 
-    nameUserMap.erase(user->name);
-    user->name = name;
+    nameUserMap.erase(user.name);
+    user.name = name;
+
     nameUserMap[name] = user;
+    idUserMap[user.id] = user;
+    pidUserMap[user.pid] = user;
 
 
     writeToSharedMemory(false);
@@ -193,13 +214,6 @@ bool UserManager::readFromSharedMemory(bool lock) {
 
 
 
-    for (auto userPair : idUserMap) {
-        if (userPair.second != nullptr) {
-            delete userPair.second;
-        }
-    }
-
-
     idUserMap.clear();
     pidUserMap.clear();
     nameUserMap.clear();
@@ -226,15 +240,15 @@ bool UserManager::readFromSharedMemory(bool lock) {
 
         // cout << "|" << id << "|" << pid << "|" << fd << "|" << ipAddr << "|" << name << "|" << endl;
 
-        User* newUser = new User();
-        newUser->id = id;
-        newUser->pid = pid;
-        newUser->fd = fd;
-        newUser->ipAddr = ipAddr;
-        newUser->name = name;
+        User newUser;
+        newUser.id = id;
+        newUser.pid = pid;
+        newUser.fd = fd;
+        newUser.ipAddr = ipAddr;
+        newUser.name = name;
 
 
-        idUserMap[newUser->id] = newUser;
+        idUserMap[newUser.id] = newUser;
         pidUserMap[pid] = newUser;
 
         if (name != "") {
@@ -274,8 +288,8 @@ bool UserManager::writeToSharedMemory(bool lock) {
 
     ostringstream oss;
     for (auto idUserPair : idUserMap) {
-        User* user = idUserPair.second;
-        oss << user->id << " " << user->pid << " " << user->fd << " " << user->ipAddr << " " << user->name << endl;
+        User user = idUserPair.second;
+        oss << user.id << " " << user.pid << " " << user.fd << " " << user.ipAddr << " " << user.name << endl;
     }
     // cout << "Write to shm: " << endl;
     // cout << oss.str();

@@ -156,8 +156,8 @@ bool MessageManager::readFromSharedMemory(bool lock) {
 
     string line;
     while (getline(iss, line)) {
-        cout << "Read from shm: " << endl;
-        cout << line << endl;
+        // cout << "Read from shm: " << endl;
+        // cout << line << endl;
         istringstream lineIss;
         lineIss.str(line);
 

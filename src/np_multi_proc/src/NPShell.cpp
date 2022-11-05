@@ -116,18 +116,18 @@ void NPShell::execute(string commandRaw, MultiProcServer &server, int pid, int f
                 sscanf(secondOperator.c_str(), "<%d", &fromUserId);
 
             } else {
-                if (server.userManager.getUserById(toUserId) == nullptr) {
+                if (server.userManager.getUserById(toUserId).pid == -1) {
                     cerr << "*** Error: user #" << toUserId << " does not exist yet. ***" << endl;
                 } else {
-                    User *me = server.userManager.getUserByPid(pid);
-                    User *toUser = server.userManager.getUserById(toUserId);
-                    if (!pipeManager.addUserPipe(me->id, toUserId)) {
-                        cerr << "*** Error: the pipe #" << me->id << "->#" << toUserId << " already exists. ***"
+                    User me = server.userManager.getUserByPid(pid);
+                    User toUser = server.userManager.getUserById(toUserId);
+                    if (!pipeManager.addUserPipe(me.id, toUserId)) {
+                        cerr << "*** Error: the pipe #" << me.id << "->#" << toUserId << " already exists. ***"
                              << endl;
                     } else {
-                        string message = "*** " + (me->name == "" ? "(no name)" : me->name) + " (#" +
-                                         to_string(me->id) + ") just piped '" + commandRaw + "' to " +
-                                         (toUser->name == "" ? "(no name)" : toUser->name) + " (#" +
+                        string message = "*** " + (me.name == "" ? "(no name)" : me.name) + " (#" +
+                                         to_string(me.id) + ") just piped '" + commandRaw + "' to " +
+                                         (toUser.name == "" ? "(no name)" : toUser.name) + " (#" +
                                          to_string(toUserId) + ") ***";
                         server.broadcast(message);
                     }
@@ -145,19 +145,19 @@ void NPShell::execute(string commandRaw, MultiProcServer &server, int pid, int f
                 doubleUserPipeFlag = true;
                 sscanf(secondOperator.c_str(), ">%d", &toUserId);
             } else {
-                if (server.userManager.getUserById(fromUserId) == nullptr) {
+                if (server.userManager.getUserById(fromUserId).pid == -1) {
                     cerr << "*** Error: user #" << fromUserId << " does not exist yet. ***" << endl;
                 } else {
-                    User *fromUser = server.userManager.getUserById(fromUserId);
-                    User *me = server.userManager.getUserByPid(pid);
+                    User fromUser = server.userManager.getUserById(fromUserId);
+                    User me = server.userManager.getUserByPid(pid);
 
-                    if (!pipeManager.loadUserPipe(fromUserId, me->id)) {
-                        cerr << "*** Error: the pipe #" << fromUserId << "->#" << me->id << " does not exist yet. ***"
+                    if (!pipeManager.loadUserPipe(fromUserId, me.id)) {
+                        cerr << "*** Error: the pipe #" << fromUserId << "->#" << me.id << " does not exist yet. ***"
                              << endl;
                     } else {
-                        string message = "*** " + (me->name == "" ? "(no name)" : me->name) + " (#" +
-                                         to_string(me->id) + ") just received from " +
-                                         (fromUser->name == "" ? "(no name)" : fromUser->name) + " (#" +
+                        string message = "*** " + (me.name == "" ? "(no name)" : me.name) + " (#" +
+                                         to_string(me.id) + ") just received from " +
+                                         (fromUser.name == "" ? "(no name)" : fromUser.name) + " (#" +
                                          to_string(fromUserId) + ") by '" + commandRaw + "' ***";
                         server.broadcast(message);
                     }
@@ -200,35 +200,35 @@ void NPShell::execute(string commandRaw, MultiProcServer &server, int pid, int f
         }
 
         if (doubleUserPipeFlag) {
-            User *me = server.userManager.getUserByPid(pid);
-            User *fromUser = server.userManager.getUserById(fromUserId);
-            User *toUser = server.userManager.getUserById(toUserId);
+            User me = server.userManager.getUserByPid(pid);
+            User fromUser = server.userManager.getUserById(fromUserId);
+            User toUser = server.userManager.getUserById(toUserId);
 
             // cout << fromUserId << " " << toUserId << endl;
 
-            if (server.userManager.getUserById(fromUserId) == nullptr) {
+            if (server.userManager.getUserById(fromUserId).pid == -1) {
                 cerr << "*** Error: user #" << fromUserId << " does not exist yet. ***" << endl;
             } else {
-                if (!pipeManager.loadUserPipe(fromUserId, me->id)) {
-                    cerr << "*** Error: the pipe #" << fromUserId << "->#" << me->id << " does not exist yet. ***"
+                if (!pipeManager.loadUserPipe(fromUserId, me.id)) {
+                    cerr << "*** Error: the pipe #" << fromUserId << "->#" << me.id << " does not exist yet. ***"
                          << endl;
                 } else {
-                    string message = "*** " + (me->name == "" ? "(no name)" : me->name) + " (#" + to_string(me->id) +
-                                     ") just received from " + (fromUser->name == "" ? "(no name)" : fromUser->name) +
+                    string message = "*** " + (me.name == "" ? "(no name)" : me.name) + " (#" + to_string(me.id) +
+                                     ") just received from " + (fromUser.name == "" ? "(no name)" : fromUser.name) +
                                      " (#" + to_string(fromUserId) + ") by '" + commandRaw + "' ***";
                     server.broadcast(message);
                 }
             }
 
-            if (server.userManager.getUserById(toUserId) == nullptr) {
+            if (server.userManager.getUserById(toUserId).pid == -1) {
                 cerr << "*** Error: user #" << toUserId << " does not exist yet. ***" << endl;
             } else {
-                if (!pipeManager.addUserPipe(me->id, toUserId)) {
-                    cerr << "*** Error: the pipe #" << me->id << "->#" << toUserId << " already exists. ***" << endl;
+                if (!pipeManager.addUserPipe(me.id, toUserId)) {
+                    cerr << "*** Error: the pipe #" << me.id << "->#" << toUserId << " already exists. ***" << endl;
                 } else {
-                    string message = "*** " + (me->name == "" ? "(no name)" : me->name) + " (#" + to_string(me->id) +
+                    string message = "*** " + (me.name == "" ? "(no name)" : me.name) + " (#" + to_string(me.id) +
                                      ") just piped '" + commandRaw + "' to " +
-                                     (toUser->name == "" ? "(no name)" : toUser->name) + " (#" + to_string(toUserId) +
+                                     (toUser.name == "" ? "(no name)" : toUser.name) + " (#" + to_string(toUserId) +
                                      ") ***";
                     server.broadcast(message);
                 }

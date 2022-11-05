@@ -139,10 +139,10 @@ void MultiProcServer::newClient(int pid, int fd, sockaddr_in ipAddr) {
     dup2(fd, fileno(stdout));
     dup2(fd, fileno(stderr));
 
-    User *user = userManager.addUser(pid, fd, ipAddr);
+    User user = userManager.addUser(pid, fd, ipAddr);
 
     string broadcastMessage =
-        "*** User '" + (user->name == "" ? "(no name)" : user->name) + "' entered from " + user->ipAddr + ".***";
+        "*** User '" + (user.name == "" ? "(no name)" : user.name) + "' entered from " + user.ipAddr + ".***";
 
     cout << "****************************************" << endl;
     cout << "** Welcome to the information server. **" << endl;
@@ -164,13 +164,13 @@ void MultiProcServer::newClient(int pid, int fd, sockaddr_in ipAddr) {
 }
 
 void MultiProcServer::closeClient(int pid, int fd) {
-    User *user = userManager.getUserByPid(pid);
+    User user = userManager.getUserByPid(pid);
 
-    broadcast("*** User '" + (user->name == "" ? "(no name)" : user->name) + "' left. ***", false);
+    broadcast("*** User '" + (user.name == "" ? "(no name)" : user.name) + "' left. ***", false);
 
-    PipeManager::closeUserPipe(user->id);
+    PipeManager::closeUserPipe(user.id);
 
-    cout << "User " << user->ipAddr << " left." << endl;
+    cout << "User " << user.ipAddr << " left." << endl;
 
 
     Message message;
@@ -188,14 +188,14 @@ void MultiProcServer::broadcast(string messageStr, bool includeSelf) {
 
     int selfPid = getpid();
     for (auto userPair : userManager.getIdUserMap()) {
-        User *user = userPair.second;
+        User user = userPair.second;
 
-        if (!includeSelf && user->pid == selfPid) {
+        if (!includeSelf && user.pid == selfPid) {
             continue;
         }
 
         Message message;
-        message.pid = user->pid;
+        message.pid = user.pid;
         message.type = "tell";
         message.value = messageStr;
         messageManager.addMessage(message);
@@ -203,13 +203,13 @@ void MultiProcServer::broadcast(string messageStr, bool includeSelf) {
 }
 
 void MultiProcServer::sendDirectMessage(int id, std::string messageStr) {
-    User *user = userManager.getUserById(id);
-    if (user == nullptr) {
+    User user = userManager.getUserById(id);
+    if (user.pid == -1) {
         return;
     }
 
     Message message;
-    message.pid = user->pid;
+    message.pid = user.pid;
     message.type = "tell";
     message.value = messageStr;
     messageManager.addMessage(message);

@@ -34,21 +34,21 @@ class UserManager {
     static int sem;
 
 
-    std::map<int, User*> idUserMap;
-    std::map<int, User*> pidUserMap;
-    std::map<std::string, User*> nameUserMap;
+    std::map<int, User> idUserMap;
+    std::map<int, User> pidUserMap;
+    std::map<std::string, User> nameUserMap;
 
    public:
     UserManager();
 
-    User* addUser(int pid, int fd, sockaddr_in ipAddr);
+    User addUser(int pid, int fd, sockaddr_in ipAddr);
     void removeUserById(int id);
     void removeUserByPid(int pid);
 
-    User* getUserById(int id, bool lock = true);
-    User* getUserByPid(int pid, bool lock = true);
-    User* getUserByName(std::string name, bool lock = true);
-    std::map<int, User*> getIdUserMap();
+    User getUserById(int id, bool lock = true);
+    User getUserByPid(int pid, bool lock = true);
+    User getUserByName(std::string name, bool lock = true);
+    std::map<int, User> getIdUserMap();
 
     bool setNameById(int id, std::string name);
 
