@@ -217,8 +217,7 @@ void MultiProcServer::sendDirectMessage(int id, std::string messageStr) {
 
 void MultiProcServer::childSignalHandler(int signum) {
     int status;
-    while (wait3(&status, WNOHANG, (rusage *)0) >= 0) {
-    }
+    wait3(&status, WNOHANG, (rusage *)0);
 }
 
 void MultiProcServer::intSignalHandler(int signum) {
