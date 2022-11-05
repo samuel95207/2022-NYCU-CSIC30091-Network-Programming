@@ -45,18 +45,16 @@ class UserManager {
     void removeUserById(int id);
     void removeUserByPid(int pid);
 
-    User* getUserById(int id);
-    User* getUserByPid(int pid);
-    User* getUserByName(std::string name);
+    User* getUserById(int id, bool lock = true);
+    User* getUserByPid(int pid, bool lock = true);
+    User* getUserByName(std::string name, bool lock = true);
     bool setNameById(int id, std::string name);
-
-    std::map<int, User*> getIdUserMap();
-    std::map<int, User*> getPidUserMap();
-    std::map<std::string, User*> getNameUserMap();
 
 
     bool setupSharedMemory();
     static void closedSharedMemory();
+
+    friend class BuildinCommand;
 
    private:
     bool readFromSharedMemory();

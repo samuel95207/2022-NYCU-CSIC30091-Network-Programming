@@ -92,10 +92,14 @@ void UserManager::removeUserByPid(int pid) {
     sem_signal(sem);
 }
 
-User* UserManager::getUserById(int id) {
-    sem_wait(sem);
+User* UserManager::getUserById(int id, bool lock) {
+    if (lock) {
+        sem_wait(sem);
+    }
     readFromSharedMemory();
-    sem_signal(sem);
+    if (lock) {
+        sem_signal(sem);
+    }
 
     auto result = idUserMap.find(id);
     if (result == idUserMap.end()) {
@@ -104,10 +108,14 @@ User* UserManager::getUserById(int id) {
     return result->second;
 }
 
-User* UserManager::getUserByPid(int pid) {
-    sem_wait(sem);
+User* UserManager::getUserByPid(int pid, bool lock) {
+    if (lock) {
+        sem_wait(sem);
+    }
     readFromSharedMemory();
-    sem_signal(sem);
+    if (lock) {
+        sem_signal(sem);
+    }
 
 
     auto result = pidUserMap.find(pid);
@@ -117,7 +125,15 @@ User* UserManager::getUserByPid(int pid) {
     return result->second;
 }
 
-User* UserManager::getUserByName(string name) {
+User* UserManager::getUserByName(string name, bool lock) {
+    if (lock) {
+        sem_wait(sem);
+    }
+    readFromSharedMemory();
+    if (lock) {
+        sem_signal(sem);
+    }
+    
     if (name == "") {
         return nullptr;
     }
@@ -128,22 +144,13 @@ User* UserManager::getUserByName(string name) {
     return result->second;
 }
 
-map<int, User*> UserManager::getIdUserMap() {
-    return idUserMap;
-}
-map<int, User*> UserManager::getPidUserMap() {
-    return pidUserMap;
-}
-map<string, User*> UserManager::getNameUserMap() {
-    return nameUserMap;
-}
 
 
 bool UserManager::setNameById(int id, string name) {
     sem_wait(sem);
     readFromSharedMemory();
 
-    User* user = getUserByName(name);
+    User* user = getUserByName(name, false);
     if (user != nullptr || name == "") {
         return false;
     }

@@ -69,7 +69,7 @@ bool BuildinCommand::whoCommand(NPShell& shell, MultiProcServer& server, int pid
                                 const vector<string>& args) {
     cout << "<ID>\t<nickname>\t<IP:port>\t<indicate me>" << endl;
     User* me = server.userManager.getUserByPid(pid);
-    for (auto idUserPair : server.userManager.getIdUserMap()) {
+    for (auto idUserPair : server.userManager.idUserMap) {
         User* user = idUserPair.second;
         cout << user->id << "\t" << (user->name == "" ? "(no name)" : user->name) << "\t" << user->ipAddr
              << (user->id == me->id ? "\t<-me" : "") << endl;
