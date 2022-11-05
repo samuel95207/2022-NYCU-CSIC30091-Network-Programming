@@ -142,7 +142,7 @@ void MultiProcServer::newClient(int pid, int fd, sockaddr_in ipAddr) {
     User user = userManager.addUser(pid, fd, ipAddr);
 
     string broadcastMessage =
-        "*** User '" + (user.name == "" ? "(no name)" : user.name) + "' entered from " + user.ipAddr + ".***";
+        "*** User '" + (user.name == "" ? "(no name)" : user.name) + "' entered from " + user.ipAddr + ". ***";
 
     cout << "****************************************" << endl;
     cout << "** Welcome to the information server. **" << endl;
@@ -223,6 +223,7 @@ void MultiProcServer::childSignalHandler(int signum) {
 void MultiProcServer::intSignalHandler(int signum) {
     UserManager::closedSharedMemory();
     MessageManager::closedSharedMemory();
+    PipeManager::closeAllPipe();
     cout << "Shared Memory removed." << endl;
     exit(0);
 }

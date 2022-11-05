@@ -21,14 +21,17 @@ class PipeManager {
     const int READ = 0;
     const int WRITE = 1;
 
+    const int FIFO_PERMS = 0666;
+    static const std::string fifoPath;
+
     int currentPipe[2];
     int newPipe[2];
 
     int currentNumberedPipe[2];
     int newNumberedPipe[2];
 
-    int currentUserPipe[2];
-    int newUserPipe[2];
+    int currentUserPipe;
+    int newUserPipe;
 
     int count = 0;
     std::unordered_map<int, std::pair<int, int>> countPipeMap;
@@ -44,9 +47,11 @@ class PipeManager {
     bool childPipeHandler(PipeMode pipeMode, PipeMode pipeMode2 = PipeMode::NONE, std::string outFilename = "");
 
     bool addNumberedPipe(int countIn);
+
     bool addUserPipe(int fromId, int toId);
     bool loadUserPipe(int fromId, int toId);
     static bool closeUserPipe(int id);
+    static bool closeAllPipe();
 
 
 

@@ -4,6 +4,7 @@
 #endif
 
 #include <fcntl.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -11,12 +12,14 @@
 
 #include <algorithm>
 #include <cstdlib>
+#include <filesystem>
 #include <iostream>
 #include <utility>
 
 using namespace std;
 
 map<pair<int, int>, pair<int, int>> PipeManager::userPipeMap;
+const string PipeManager::fifoPath = "./user_pipe";
 
 
 PipeManager::PipeManager() { newSession(); }
@@ -31,14 +34,13 @@ bool PipeManager::newSession() {
     currentNumberedPipe[READ] = 0;
     currentNumberedPipe[WRITE] = 0;
 
-    newUserPipe[READ] = 0;
-    newUserPipe[WRITE] = 0;
-    currentUserPipe[READ] = 0;
-    currentUserPipe[WRITE] = 0;
+    newUserPipe = 0;
+    currentUserPipe = 0;
 
 
     reduceNumberedPipesCount();
     loadCurrentNumberedPipe();
+
 
     return true;
 }
@@ -51,18 +53,17 @@ bool PipeManager::rootPipeHandler(PipeMode pipeMode, PipeMode pipeMode2, std::st
 
     // Check if current numbered pipe exist
     if (pipeMode == PipeMode::USER_PIPE_IN || pipeMode == PipeMode::USER_PIPE_BOTH) {
-        if (currentUserPipe[READ] == 0 || currentUserPipe[WRITE] == 0) {
+        if (currentUserPipe < 0) {
             currentPipe[READ] = fileno(fopen("/dev/null", "r"));
             currentPipe[WRITE] = fileno(fopen("/dev/null", "w"));
         } else {
             // cout << "currentUserPipe " << currentUserPipe[READ] << " " << currentUserPipe[WRITE] << endl;
 
-            currentPipe[READ] = currentUserPipe[READ];
-            currentPipe[WRITE] = currentUserPipe[WRITE];
+            currentPipe[READ] = currentUserPipe;
+            currentPipe[WRITE] = fileno(fopen("/dev/null", "w"));
         }
 
-        currentUserPipe[READ] = 0;
-        currentUserPipe[WRITE] = 0;
+        currentUserPipe = 0;
 
 
     } else if (currentNumberedPipe[READ] != 0 && currentNumberedPipe[WRITE] != 0) {
@@ -78,12 +79,12 @@ bool PipeManager::rootPipeHandler(PipeMode pipeMode, PipeMode pipeMode2, std::st
 
     // Check if new numbered pipe is created
     if (pipeMode == PipeMode::USER_PIPE_OUT || pipeMode == PipeMode::USER_PIPE_BOTH) {
-        if (newUserPipe[READ] == 0 || newUserPipe[WRITE] == 0) {
+        if (newUserPipe < 0) {
             newPipe[READ] = fileno(fopen("/dev/null", "r"));
             newPipe[WRITE] = fileno(fopen("/dev/null", "w"));
         } else {
-            newPipe[READ] = newUserPipe[READ];
-            newPipe[WRITE] = newUserPipe[WRITE];
+            newPipe[READ] = fileno(fopen("/dev/null", "r"));
+            newPipe[WRITE] = newUserPipe;
         }
 
     } else if (pipeMode == PipeMode::NUMBERED_PIPE || pipeMode == PipeMode::NUMBERED_PIPE_STDERR ||
@@ -195,21 +196,20 @@ bool PipeManager::addNumberedPipe(int countIn) {
 }
 
 bool PipeManager::addUserPipe(int fromId, int toId) {
-    pair<int, int> key = pair<int, int>(fromId, toId);
+    // pair<int, int> key = pair<int, int>(fromId, toId);
 
-    newUserPipe[READ] = 0;
-    newUserPipe[WRITE] = 0;
+    string path = "./user_pipe/" + to_string(fromId) + "_" + to_string(toId);
 
-    if (userPipeMap.find(key) != userPipeMap.end()) {
+    if (mknod(path.c_str(), S_IFIFO | FIFO_PERMS, 0) < 0) {
+        // cerr << "mknod() error! " << strerror(errno) << " " << errno << endl;
         return false;
     }
-
-    if (pipe(newUserPipe)) {
-        cerr << "Error! Pipe error." << endl;
+    int dummyfd = open(path.c_str(), O_RDONLY | O_NONBLOCK);
+    newUserPipe = open(path.c_str(), O_WRONLY | O_NONBLOCK);
+    if (newUserPipe < 0) {
+        cerr << "open() error! " << strerror(errno) << " " << errno << endl;
         return false;
     }
-
-    userPipeMap[key] = pair<int, int>(newUserPipe[READ], newUserPipe[WRITE]);
 
 
     return true;
@@ -217,40 +217,39 @@ bool PipeManager::addUserPipe(int fromId, int toId) {
 
 
 bool PipeManager::loadUserPipe(int fromId, int toId) {
-    pair<int, int> key = pair<int, int>(fromId, toId);
+    string path = "./user_pipe/" + to_string(fromId) + "_" + to_string(toId);
 
-    currentUserPipe[READ] = 0;
-    currentUserPipe[WRITE] = 0;
+    currentUserPipe = open(path.c_str(), O_RDONLY | O_NONBLOCK);
 
-    auto findedPipeIter = userPipeMap.find(key);
-    if (findedPipeIter == userPipeMap.end()) {
-        return false;
-    }
-
-
-    currentUserPipe[READ] = findedPipeIter->second.first;
-    currentUserPipe[WRITE] = findedPipeIter->second.second;
-
-    userPipeMap.erase(key);
+    unlink(path.c_str());
 
     return true;
 }
 
 bool PipeManager::closeUserPipe(int id) {
-    vector<pair<int, int>> deleteList;
-    for (auto userPipePair : userPipeMap) {
-        if (userPipePair.first.first == id || userPipePair.first.second == id) {
-            close(userPipePair.second.first);
-            close(userPipePair.second.second);
-            deleteList.push_back(userPipePair.first);
+    for (const auto& entry : std::filesystem::directory_iterator(fifoPath)) {
+        if (!entry.is_fifo()) {
+            continue;
         }
-    }
-    for (auto key : deleteList) {
-        userPipeMap.erase(key);
+        string filename = entry.path().filename();
+        string id1 = filename.substr(0, filename.find("_"));
+        string id2 = filename.substr(filename.find("_") + 1);
+        if (id1 == to_string(id) || id2 == to_string(id)) {
+            unlink(entry.path().c_str());
+        }
     }
     return true;
 }
 
+bool PipeManager::closeAllPipe() {
+    for (const auto& entry : std::filesystem::directory_iterator(fifoPath)) {
+        if (!entry.is_fifo()) {
+            continue;
+        }
+        unlink(entry.path().c_str());
+    }
+    return true;
+}
 
 
 void PipeManager::loadCurrentNumberedPipe() {
