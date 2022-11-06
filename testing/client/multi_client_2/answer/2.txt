@@ -91,6 +91,7 @@
 3| % cat
 3| bin
 3| ls.txt
+3| nbpin
 3| test.html
 3| test1.txt
 3| test2.txt
