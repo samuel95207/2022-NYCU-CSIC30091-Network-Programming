@@ -4,7 +4,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-
 #include <iostream>
 
 
@@ -99,8 +98,8 @@ void sem_op(int id, int value) {
     if ((op_op[0].sem_op = value) == 0) {
         cerr << "can't have value == 0" << endl;
     }
-    if (semop(id, &op_op[0], 1) < 0) {
-        cerr << "sem_op error" << endl;
+    while (semop(id, &op_op[0], 1) < 0) {
+        // cerr << "sem_op error" << endl;
     }
 }
 
