@@ -50,7 +50,7 @@ void SingleProcServer::run() {
                 continue;
             }
             fprintf(stderr, "select: %s\n", strerror(errno));
-            return;
+            continue;
         }
 
 
