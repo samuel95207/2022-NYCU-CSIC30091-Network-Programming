@@ -84,7 +84,7 @@ test3: part3
 	@ - cd testing; \
 	./demo.sh ../np_multi_proc 7002
 
-testall: np_simple np_single_proc np_multi_proc
+testall: part1 part2 part3
 	@ - cd testing; \
 	./demo.sh ../ 7002 7003 7004
 
