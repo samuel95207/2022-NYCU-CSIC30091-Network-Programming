@@ -94,9 +94,9 @@ zip:
 	@rm -f 311511034.zip
 	@rm -rf 311511034
 	@mkdir 311511034
-	@mkdir 311511034/src/np_simple/src
-	@mkdir 311511034/src/np_single_proc/src
-	@mkdir 311511034/src/np_multi_proc/src
+	@mkdir -p 311511034/src/np_simple/src
+	@mkdir -p 311511034/src/np_single_proc/src
+	@mkdir -p 311511034/src/np_multi_proc/src
 	@cp src/np_simple/src/*.cpp 311511034/src/np_simple/src
 	@cp src/np_simple/src/*.h 311511034/src/np_simple/src
 	@cp src/np_single_proc/src/*.cpp 311511034/src/np_single_proc/src
