@@ -65,7 +65,7 @@ bool PipeManager::rootPipeHandler(PipeMode pipeMode, PipeMode pipeMode2, std::st
 
     // Check if current numbered pipe exist
     if (pipeMode == PipeMode::USER_PIPE_IN || pipeMode == PipeMode::USER_PIPE_BOTH) {
-        if (currentUserPipe < 0) {
+        if (currentUserPipe <= 0) {
             currentPipe[READ] = fileno(fopen("/dev/null", "r"));
             currentPipe[WRITE] = fileno(fopen("/dev/null", "w"));
         } else {
@@ -91,7 +91,7 @@ bool PipeManager::rootPipeHandler(PipeMode pipeMode, PipeMode pipeMode2, std::st
 
     // Check if new numbered pipe is created
     if (pipeMode == PipeMode::USER_PIPE_OUT || pipeMode == PipeMode::USER_PIPE_BOTH) {
-        if (newUserPipe < 0) {
+        if (newUserPipe <= 0) {
             newPipe[READ] = fileno(fopen("/dev/null", "r"));
             newPipe[WRITE] = fileno(fopen("/dev/null", "w"));
         } else {
@@ -127,8 +127,10 @@ bool PipeManager::parentPipeHandler(PipeMode pipeMode, PipeMode pipeMode2, std::
     }
 
     if (pipeMode == PipeMode::USER_PIPE_OUT) {
-        close(dummyReadFd);
-        close(newUserPipe);
+        if (newUserPipe > 0) {
+            close(dummyReadFd);
+            close(newUserPipe);
+        }
         dummyReadFd = 0;
         newUserPipe = 0;
     }
