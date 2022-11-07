@@ -130,7 +130,7 @@ void NPShell::execute(string commandRaw, MultiProcServer &server, int pid, int f
                                          ") ***";
                         server.broadcast(message);
 
-                                                Message icpMessage;
+                        Message icpMessage;
                         icpMessage.pid = me.pid;
                         icpMessage.type = "openFromUserPipe";
                         icpMessage.value = to_string(me.id) + "_" + to_string(toUser.id);
@@ -248,11 +248,16 @@ void NPShell::execute(string commandRaw, MultiProcServer &server, int pid, int f
                 }
             }
 
-            Message message;
-            message.pid = server.userManager.getUserById(fromUserId).pid;
-            message.type = "closeFromUserPipe";
-            message.value = to_string(fromUserId) + "_" + to_string(toUserId);
-            MessageManager::addMessage(message);
+            Message icpMessage;
+            icpMessage.pid = server.userManager.getUserById(fromUserId).pid;
+            icpMessage.type = "closeFromUserPipe";
+            icpMessage.value = to_string(fromUserId) + "_" + to_string(me.id);
+            MessageManager::addMessage(icpMessage);
+
+            icpMessage.pid = me.pid;
+            icpMessage.type = "openFromUserPipe";
+            icpMessage.value = to_string(me.id) + "_" + to_string(toUserId);
+            MessageManager::addMessage(icpMessage);
 
             executeForkedCommand(command, args, PipeMode::USER_PIPE_BOTH);
             pipeManager.newSession();

@@ -126,7 +126,7 @@ bool PipeManager::parentPipeHandler(PipeMode pipeMode, PipeMode pipeMode2, std::
         close(currentPipe[WRITE]);
     }
 
-    if (pipeMode == PipeMode::USER_PIPE_OUT) {
+    if (pipeMode == PipeMode::USER_PIPE_OUT || pipeMode == PipeMode::USER_PIPE_BOTH) {
         if (newUserPipe > 0) {
             close(dummyReadFd);
             close(newUserPipe);
