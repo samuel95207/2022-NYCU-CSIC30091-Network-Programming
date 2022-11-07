@@ -22,6 +22,13 @@
 2| % name FruitBuffet
 3| % name GingerCookies
 4| % name HotCakes
+4| *** User from [address1] is named 'Egglet'. ***
+4| *** User from [address2] is named 'FruitBuffet'. ***
+4| *** User from [address3] is named 'GingerCookies'. ***
+4| *** User from [address4] is named 'HotCakes'. ***
+4| % name HaHa
+4| *** User from [address4] is named 'HaHa'. ***
+4| % name GuaGua
 1| *** User '(no name)' entered from [address2]. ***
 1| *** User '(no name)' entered from [address3]. ***
 1| *** User '(no name)' entered from [address4]. ***
@@ -30,6 +37,8 @@
 1| *** User from [address2] is named 'FruitBuffet'. ***
 1| *** User from [address3] is named 'GingerCookies'. ***
 1| *** User from [address4] is named 'HotCakes'. ***
+1| *** User from [address4] is named 'HaHa'. ***
+1| *** User from [address4] is named 'GuaGua'. ***
 1| *** Egglet (#1) just piped 'number test.html >2' to FruitBuffet (#2) ***
 1| % cat test.html >3
 1| *** Egglet (#1) just piped 'cat test.html >3' to GingerCookies (#3) ***
@@ -43,6 +52,8 @@
 2| % number <1
 2| *** User from [address3] is named 'GingerCookies'. ***
 2| *** User from [address4] is named 'HotCakes'. ***
+2| *** User from [address4] is named 'HaHa'. ***
+2| *** User from [address4] is named 'GuaGua'. ***
 2| *** Egglet (#1) just piped 'number test.html >2' to FruitBuffet (#2) ***
 2| *** Egglet (#1) just piped 'cat test.html >3' to GingerCookies (#3) ***
 2| *** FruitBuffet (#2) just received from Egglet (#1) by 'number <1' ***
@@ -60,6 +71,8 @@
 3| *** User from [address3] is named 'GingerCookies'. ***
 3| % number <2
 3| *** User from [address4] is named 'HotCakes'. ***
+3| *** User from [address4] is named 'HaHa'. ***
+3| *** User from [address4] is named 'GuaGua'. ***
 3| *** Egglet (#1) just piped 'number test.html >2' to FruitBuffet (#2) ***
 3| *** Egglet (#1) just piped 'cat test.html >3' to GingerCookies (#3) ***
 3| *** FruitBuffet (#2) just received from Egglet (#1) by 'number <1' ***
@@ -73,22 +86,19 @@
 3| % ls >4
 2| *** Error: the pipe #4->#2 does not exist yet. ***
 2| % number test.html >5
-3| *** GingerCookies (#3) just piped 'ls >4' to HotCakes (#4) ***
+3| *** GingerCookies (#3) just piped 'ls >4' to GuaGua (#4) ***
 3| % number <2
-4| *** User from [address1] is named 'Egglet'. ***
-4| *** User from [address2] is named 'FruitBuffet'. ***
-4| *** User from [address3] is named 'GingerCookies'. ***
-4| *** User from [address4] is named 'HotCakes'. ***
+4| *** User from [address4] is named 'GuaGua'. ***
 4| % removetag test.html >1
 4| *** Egglet (#1) just piped 'number test.html >2' to FruitBuffet (#2) ***
 4| *** Egglet (#1) just piped 'cat test.html >3' to GingerCookies (#3) ***
 4| *** FruitBuffet (#2) just received from Egglet (#1) by 'number <1' ***
 4| *** FruitBuffet (#2) just piped 'cat test.html >3' to GingerCookies (#3) ***
 4| *** GingerCookies (#3) just received from FruitBuffet (#2) by 'number <2' ***
-4| *** GingerCookies (#3) just piped 'ls >4' to HotCakes (#4) ***
-4| *** HotCakes (#4) just piped 'removetag test.html >1' to Egglet (#1) ***
+4| *** GingerCookies (#3) just piped 'ls >4' to GuaGua (#4) ***
+4| *** GuaGua (#4) just piped 'removetag test.html >1' to Egglet (#1) ***
 4| % number <3
-4| *** HotCakes (#4) just received from GingerCookies (#3) by 'number <3' ***
+4| *** GuaGua (#4) just received from GingerCookies (#3) by 'number <3' ***
 4|    1 baozi
 4|    2 bin
 4|    3 ls.txt
@@ -105,9 +115,9 @@
 1| *** FruitBuffet (#2) just received from Egglet (#1) by 'number <1' ***
 1| *** FruitBuffet (#2) just piped 'cat test.html >3' to GingerCookies (#3) ***
 1| *** GingerCookies (#3) just received from FruitBuffet (#2) by 'number <2' ***
-1| *** GingerCookies (#3) just piped 'ls >4' to HotCakes (#4) ***
-1| *** HotCakes (#4) just piped 'removetag test.html >1' to Egglet (#1) ***
-1| *** HotCakes (#4) just received from GingerCookies (#3) by 'number <3' ***
+1| *** GingerCookies (#3) just piped 'ls >4' to GuaGua (#4) ***
+1| *** GuaGua (#4) just piped 'removetag test.html >1' to Egglet (#1) ***
+1| *** GuaGua (#4) just received from GingerCookies (#3) by 'number <3' ***
 1| *** GingerCookies (#3) just received from Egglet (#1) by 'cat <1' ***
 1| *** Error: user #5 does not exist yet. ***
 1| % exit
@@ -123,16 +133,16 @@
 5| 1	IceCream	[address5]	<-me
 5| 2	FruitBuffet	[address2]
 5| 3	GingerCookies	[address3]
-5| 4	HotCakes	[address4]
+5| 4	GuaGua	[address4]
 5| % cat <4
 5| *** Error: the pipe #4->#1 does not exist yet. ***
 5| % number test.html >3
 2| *** GingerCookies (#3) just received from FruitBuffet (#2) by 'number <2' ***
-2| *** GingerCookies (#3) just piped 'ls >4' to HotCakes (#4) ***
+2| *** GingerCookies (#3) just piped 'ls >4' to GuaGua (#4) ***
 2| *** Error: user #5 does not exist yet. ***
 2| % exit
-3| *** HotCakes (#4) just piped 'removetag test.html >1' to Egglet (#1) ***
-3| *** HotCakes (#4) just received from GingerCookies (#3) by 'number <3' ***
+3| *** GuaGua (#4) just piped 'removetag test.html >1' to Egglet (#1) ***
+3| *** GuaGua (#4) just received from GingerCookies (#3) by 'number <3' ***
 3| *** GingerCookies (#3) just received from Egglet (#1) by 'cat <1' ***
 3| <!test.html>
 3| <TITLE>Test</TITLE>

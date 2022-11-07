@@ -124,18 +124,13 @@ bool NPShell::executeForkedCommand(const std::string &command, const std::vector
         return false;
     }
 
-    pid_t pid = fork();
+    pid_t pid;
 
-    if (pid == -1) {
-        if (pipeMode == PipeMode::NORMAL_PIPE || pipeMode == PipeMode::NUMBERED_PIPE ||
-            pipeMode == PipeMode::NUMBERED_PIPE_STDERR) {
-            waitpid(-1, NULL, 0);
-        } else {
-            cerr << "Fork error!" << endl;
-            return false;
-        }
+    do {
+        pid = fork();
+    } while (pid < 0);
 
-    } else if (pid > 0) {
+    if (pid > 0) {
         // Parent Process
         if (!pipeManager.parentPipeHandler(pipeMode, outFilename)) {
             cerr << "Pipe error!" << endl;

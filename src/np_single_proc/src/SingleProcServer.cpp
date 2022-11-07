@@ -50,7 +50,7 @@ void SingleProcServer::run() {
                 continue;
             }
             fprintf(stderr, "select: %s\n", strerror(errno));
-            return;
+            continue;
         }
 
 
@@ -88,8 +88,10 @@ void SingleProcServer::run() {
             int readSize;
             NPShell *shell = npshellMap[fd];
 
+            do {
+                readSize = read(fd, buf, sizeof(buf));
+            } while (readSize < 0);
 
-            readSize = read(fd, buf, sizeof(buf));
             string inStr = string(buf).substr(0, readSize - 1);
             if (!inStr.empty() && inStr[inStr.length() - 1] == '\r') {
                 inStr.erase(inStr.size() - 1);

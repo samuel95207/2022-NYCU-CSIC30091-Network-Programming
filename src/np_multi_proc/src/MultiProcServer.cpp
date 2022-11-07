@@ -132,7 +132,6 @@ void MultiProcServer::run() {
                 exit(0);
             } else {
                 messageManager.run(*this);
-                cout << "messageManager end" << endl;
                 exit(0);
             }
 
