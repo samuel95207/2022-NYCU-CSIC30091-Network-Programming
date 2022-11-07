@@ -106,9 +106,11 @@ bool PipeManager::rootPipeHandler(PipeMode pipeMode, PipeMode pipeMode2, std::st
         newPipe[WRITE] = newNumberedPipe[WRITE];
 
     } else if (pipeMode == PipeMode::NORMAL_PIPE || pipeMode2 == PipeMode::NORMAL_PIPE) {
-        if (pipe(newPipe)) {
-            return false;
-        }
+        int pipeResult;
+        do {
+            pipeResult = pipe(newPipe);
+        } while (pipeResult < 0);
+
         // cout << "new pipe" << endl;
         // cout << newPipe[READ] << " " << newPipe[WRITE] << endl;
     }
@@ -201,9 +203,11 @@ bool PipeManager::addNumberedPipe(int countIn) {
 
     int findedPipe[2] = {0, 0};
     if (findedPipeIter == countPipeMap.end()) {
-        if (pipe(findedPipe)) {
-            return false;
-        }
+        int pipeResult;
+        do {
+            pipeResult = pipe(findedPipe);
+        } while (pipeResult < 0);
+
         countPipeMap[idx] = pair<int, int>(findedPipe[READ], findedPipe[WRITE]);
     } else {
         findedPipe[READ] = findedPipeIter->second.first;
