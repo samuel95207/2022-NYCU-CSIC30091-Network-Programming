@@ -86,7 +86,7 @@ test3: part3
 
 testall: part1 part2 part3
 	@ - cd testing; \
-	./demo.sh ../ 7002 7003 7004
+	./demo.sh ../ 10001 10002 10003
 
 
 zip:
