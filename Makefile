@@ -43,10 +43,16 @@ cat:
 	cp /usr/bin/cat working_dir/bin/cat
 
 
-clean:
+clean1:
 	@$(MAKE) clean -C src/np_simple
+
+clean2:
 	@$(MAKE) clean -C src/np_single_proc
+
+clean3:
 	@$(MAKE) clean -C src/np_multi_proc
+
+clean: clean1 clean2 clean3
 	rm -f working_dir/np_simple
 	rm -f working_dir/np_single_proc
 	rm -f working_dir/np_multi_proc
@@ -55,25 +61,25 @@ clean:
 	rm -f np_multi_proc
 
 
-run1:
+run1: np_simple
 	@$(MAKE) run -C src/np_simple
 
-run2:
+run2: np_single_proc
 	@$(MAKE) run -C src/np_single_proc
 
-run3:
+run3: np_multi_proc
 	@$(MAKE) run -C src/np_multi_proc
 
 
-test1: np_simple
+test1: clean1 np_simple
 	@ - cd testing; \
 	./demo.sh ../np_simple 7002
 
-test2: np_single_proc
+test2: clean2 np_single_proc
 	@ - cd testing; \
 	./demo.sh ../np_single_proc 7002
 
-test3: np_multi_proc
+test3: clean3 np_multi_proc
 	@ - cd testing; \
 	./demo.sh ../np_multi_proc 7002
 
