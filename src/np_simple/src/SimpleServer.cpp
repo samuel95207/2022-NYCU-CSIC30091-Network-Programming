@@ -47,11 +47,13 @@ void SimpleServer::run() {
             return;
         }
 
-        pid_t pid = fork();
-        if (pid == -1) {
-            cerr << "Fork error!" << endl;
-            return;
-        } else if (pid > 0) {
+        pid_t pid;
+        
+        do {
+            pid = fork();
+        } while (pid < 0);
+
+        if (pid > 0) {
             // Parent Process
             close(slaveSocket);
         } else {
