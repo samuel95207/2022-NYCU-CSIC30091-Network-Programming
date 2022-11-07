@@ -40,6 +40,9 @@ void NPShell::run() {
     pipeManager.newSession();
     string commandRaw;
     while (cout << symbol && getline(cin, commandRaw)) {
+        if (!commandRaw.empty() && commandRaw[commandRaw.length() - 1] == '\r') {
+            commandRaw.erase(commandRaw.size() - 1);
+        }
         auto parseResult = Parser::parse(commandRaw);
         // Parser::printParseResult(parseResult);
 

@@ -26,6 +26,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+#include <algorithm>
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
@@ -105,6 +106,9 @@ void MultiProcServer::run() {
                 string commandRaw;
                 while (getline(cin, commandRaw)) {
                     // cout << pid << " " << slaveSocket << endl;
+                    if (!commandRaw.empty() && commandRaw[commandRaw.length() - 1] == '\r') {
+                        commandRaw.erase(commandRaw.size() - 1);
+                    }
                     shell.execute(commandRaw, *this, pid, slaveSocket);
                     if (shell.getExit()) {
                         break;
