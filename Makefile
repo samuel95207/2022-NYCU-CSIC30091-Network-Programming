@@ -97,10 +97,13 @@ zip:
 	@mkdir -p 311511034/src/np_simple/src
 	@mkdir -p 311511034/src/np_single_proc/src
 	@mkdir -p 311511034/src/np_multi_proc/src
+	@cp src/np_simple/Makefile 311511034/src/np_simple/
 	@cp src/np_simple/src/*.cpp 311511034/src/np_simple/src
 	@cp src/np_simple/src/*.h 311511034/src/np_simple/src
+	@cp src/np_single_proc/Makefile 311511034/src/np_single_proc/
 	@cp src/np_single_proc/src/*.cpp 311511034/src/np_single_proc/src
 	@cp src/np_single_proc/src/*.h 311511034/src/np_single_proc/src
+	@cp src/np_multi_proc/Makefile 311511034/src/np_multi_proc/
 	@cp src/np_multi_proc/src/*.cpp 311511034/src/np_multi_proc/src
 	@cp src/np_multi_proc/src/*.h 311511034/src/np_multi_proc/src
 	@cp Makefile 311511034
