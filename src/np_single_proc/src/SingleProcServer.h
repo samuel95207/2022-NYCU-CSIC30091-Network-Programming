@@ -59,4 +59,6 @@ class SingleProcServer {
 
     void broadcast(std::string message);
     void sendDirectMessage(int id, std::string message);
+
+    static void childSignalHandler(int signum);
 };

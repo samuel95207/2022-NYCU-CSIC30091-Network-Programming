@@ -35,7 +35,6 @@
 using namespace std;
 
 NPShell::NPShell() {
-    signal(SIGCHLD, NPShell::childSignalHandler);
     historyFilePath = string(getpwuid(getuid())->pw_dir) + "/.npshell_history";
     // cout << historyFilePath << endl;
 }
@@ -331,8 +330,3 @@ void NPShell::resetEnv() {
 void NPShell::setExit() { exitFlag = true; }
 
 bool NPShell::getExit() { return exitFlag; }
-
-void NPShell::childSignalHandler(int signum) {
-    int status;
-    wait(&status);
-}

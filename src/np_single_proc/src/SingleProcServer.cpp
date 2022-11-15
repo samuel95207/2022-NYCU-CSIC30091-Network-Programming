@@ -24,7 +24,7 @@
 using namespace std;
 
 
-SingleProcServer::SingleProcServer(int port) : port(port) {}
+SingleProcServer::SingleProcServer(int port) : port(port) { signal(SIGCHLD, SingleProcServer::childSignalHandler); }
 
 void SingleProcServer::run() {
     sockaddr_in clientAddr;
@@ -230,4 +230,10 @@ void SingleProcServer::sendDirectMessage(int id, std::string message) {
     dup2(savedStderr, fileno(stderr));
     close(savedStdout);
     close(savedStderr);
+}
+
+void SingleProcServer::childSignalHandler(int signum) {
+    int status;
+    while (waitpid(-1, &status, WNOHANG) > 0) {
+    }
 }

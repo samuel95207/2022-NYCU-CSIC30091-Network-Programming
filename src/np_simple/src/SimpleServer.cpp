@@ -48,7 +48,7 @@ void SimpleServer::run() {
         }
 
         pid_t pid;
-        
+
         do {
             pid = fork();
         } while (pid < 0);
@@ -79,6 +79,6 @@ void SimpleServer::run() {
 
 void SimpleServer::childSignalHandler(int signum) {
     int status;
-    while (wait3(&status, WNOHANG, (rusage *)0) >= 0) {
+    while (waitpid(-1, &status, WNOHANG) > 0) {
     }
 }
