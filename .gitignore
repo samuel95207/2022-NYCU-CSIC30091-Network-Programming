@@ -48,3 +48,5 @@ Thumbs.db
 *.mov
 *.wmv
 
+working_dir/http_server
+examples/boost_asio_example/echo_server
