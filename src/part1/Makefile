@@ -53,4 +53,5 @@ cleanobj :
 run:
 	@make
 	@cp $(TARGET) ../../working_dir/
+	@echo Running $(TARGET)
 	@cd ../../working_dir/; $(TARGET) 7001
