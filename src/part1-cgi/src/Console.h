@@ -18,6 +18,8 @@
 using namespace std;
 
 class Console {
+    static map<string, string> htmlEscapeMap;
+
     boost::asio::io_context io_context;
 
     HttpRequest request;

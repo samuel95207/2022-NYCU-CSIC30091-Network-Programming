@@ -15,6 +15,12 @@
 
 using namespace std;
 
+map<string, string> Console::htmlEscapeMap = {
+    {" ", "&nbsp;"},  {"\n", "&NewLine;"}, {">", "&gt;"},    {"<", "&lt;"},   {"\'", "&apos;"},
+    {"\"", "&quot;"}, {"\\|", "&#124;"},   {"-", "&ndash;"}, {"\\\\", "\\\\"}
+
+};
+
 
 void Console::start() {
     try {
@@ -160,11 +166,17 @@ void Console::renderHtml() {
 
 
 string Console::renderCommand(string value) {
-    value = regex_replace(value, std::regex("\n"), "&NewLine;");
+    value = regex_replace(value, std::regex("&"), "&amp;");
+    for (auto escape : htmlEscapeMap) {
+        value = regex_replace(value, std::regex(escape.first), escape.second);
+    }
     return string("<b>") + value + string("</b>");
 }
 
 string Console::renderResponse(string value) {
-    value = regex_replace(value, std::regex("\n"), "&NewLine;");
+    value = regex_replace(value, std::regex("&"), "&amp;");
+    for (auto escape : htmlEscapeMap) {
+        value = regex_replace(value, std::regex(escape.first), escape.second);
+    }
     return value;
 }
