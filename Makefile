@@ -1,4 +1,4 @@
-
+MAKE=make
 
 part1:
 	@$(MAKE) -C src/part1-http
