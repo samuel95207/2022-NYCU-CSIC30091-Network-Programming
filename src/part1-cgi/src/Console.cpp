@@ -1,4 +1,6 @@
+#include <algorithm>
 #include <iostream>
+#include <regex>
 
 #ifndef _CONSOLE_H_
 #define _CONSOLE_H_
@@ -16,12 +18,8 @@ using namespace std;
 
 void Console::start() {
     try {
-
         getCgiEnv();
-
-        cout << "HTTP/1.1 200 OK\r\n";
-        cout << "Content-type:text/html\r\n\r\n";
-        cout << "output<br/>";
+        // cout << "output<br/>";
         // request.print();
 
         for (auto queryPair : request.queryMap) {
@@ -41,16 +39,31 @@ void Console::start() {
         }
 
         io_context.run();
-        // while (true) {
-        //     for (auto sessionPair : sessions) {
-        //         if (sessionPair.second->isExit()) {
-        //             cout << "id=" << sessionPair.first << "<br/>";
-        //             for (auto commandResponse : sessionPair.second->getCommandResponseArr()) {
-        //                 cout << commandResponse.command << "|" << commandResponse.response << "<br/>";
-        //             }
-        //         }
-        //     }
-        // }
+
+        renderBaseHtml();
+
+        while (true) {
+            bool exit = true;
+            for (auto sessionPair : sessions) {
+                exit = exit && sessionPair.second->isExit();
+            }
+            if (exit) {
+                break;
+            }
+        }
+        for (auto sessionPair : sessions) {
+            for (auto commandResponse : sessionPair.second->getCommandResponseArr()) {
+                // cout << (commandResponse.type == CommandResponseType::COMMAND ? "COMMAND" : "RESPONSE") << "|"
+                //      << commandResponse.value << "|<br/>";
+                if (commandResponse.type == CommandResponseType::COMMAND) {
+                    renderCommand(sessionPair.first, commandResponse.value);
+                } else {
+                    renderResponse(sessionPair.first, commandResponse.value);
+                }
+            }
+        }
+
+
     } catch (std::exception& e) {
         cerr << "Exception: " << e.what() << "<br/>";
     }
@@ -83,4 +96,80 @@ void Console::getCgiEnv() {
         getline(queryTokenIss, value);
         request.queryMap[key] = value;
     }
+}
+
+
+void Console::renderBaseHtml() {
+    cout << "HTTP/1.1 200 OK\r\n"
+            "Content-type:text/html\r\n\r\n"
+            "<!DOCTYPE html>"
+            "<html lang=\"en\">"
+            "  <head>"
+            "    <meta charset=\"UTF-8\" />"
+            "    <title>NP Project 3 Sample Console</title>"
+            "    <link"
+            "      rel=\"stylesheet\""
+            "      href=\"https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css\""
+            "      integrity=\"sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2\""
+            "      crossorigin=\"anonymous\""
+            "    />"
+            "    <link"
+            "      href=\"https://fonts.googleapis.com/css?family=Source+Code+Pro\""
+            "      rel=\"stylesheet\""
+            "    />"
+            "    <link"
+            "      rel=\"icon\""
+            "      type=\"image/png\""
+            "      href=\"https://cdn0.iconfinder.com/data/icons/small-n-flat/24/678068-terminal-512.png\""
+            "    />"
+            "    <style>"
+            "      * {"
+            "        font-family: 'Source Code Pro', monospace;"
+            "        font-size: 1rem !important;"
+            "      }"
+            "      body {"
+            "        background-color: #212529;"
+            "      }"
+            "      pre {"
+            "        color: #cccccc;"
+            "      }"
+            "      b {"
+            "        color: #01b468;"
+            "      }"
+            "    </style>"
+            "  </head>"
+            "  <body>"
+            "    <table class=\"table table-dark table-bordered\">"
+            "      <thead>"
+            "        <tr>";
+    for (auto sessionPair : sessions) {
+        cout << "<th scope=\"col\">" << sessionPair.second->getHost() << ":" << sessionPair.second->getPort()
+             << "</th>";
+    }
+    cout << "        </tr>"
+            "      </thead>"
+            "      <tbody>"
+            "        <tr>";
+    for (auto sessionPair : sessions) {
+        cout << "<td><pre id=\"s" << sessionPair.first << "\" class=\"mb-0\"></pre></td>";
+    }
+    cout << "        </tr>"
+            "      </tbody>"
+            "    </table>"
+            "  </body>"
+            "</html>";
+    cout.flush();
+}
+
+
+void Console::renderCommand(int id, string value) {
+    value = regex_replace(value, std::regex("\n"), "&NewLine;");
+    cout << "<script>document.getElementById('s" << id << "').innerHTML += '<b>" << value << "</b>';</script>";
+    cout.flush();
+}
+
+void Console::renderResponse(int id, string value) {
+    value = regex_replace(value, std::regex("\n"), "&NewLine;");
+    cout << "<script>document.getElementById('s" << id << "').innerHTML += '" << value << "';</script>";
+    cout.flush();
 }

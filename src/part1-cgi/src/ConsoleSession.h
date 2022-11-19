@@ -52,7 +52,13 @@ class ConsoleSession : public enable_shared_from_this<ConsoleSession> {
 
     void start(int idIn, string hostIn, int portIn, string filenameIn, HttpRequest requestIn);
     bool isExit();
+    
+    
+    string getHost();
+    int getPort();
     vector<CommandResponse> getCommandResponseArr();
+
+
 
 
    private:

@@ -38,16 +38,17 @@ void ConsoleSession::start(int idIn, string hostIn, int portIn, string filenameI
     exit = false;
 
 
-    cout << "id = " << id << " start!"
-         << "<br/>";
+    // cout << "id = " << id << " start!"
+    //      << "<br/>";
 
 
     scriptFile.open((scriptPath + filename).c_str(), ios::in);
 
-    cout << "filepath = " << scriptPath + filename << " " << scriptFile.is_open() << "<br/>";
+    // cout << "filepath = " << scriptPath + filename << " " << scriptFile.is_open() << "<br/>";
 
     tcp::resolver::query query(host, to_string(port));
-    cout << "id " << id << " query<br/>";
+
+    // cout << "id " << id << " query<br/>";
 
     resolver.async_resolve(query, boost::bind(&ConsoleSession::onResolve, shared_from_this(),
                                               boost::asio::placeholders::error, boost::asio::placeholders::iterator));
@@ -55,6 +56,10 @@ void ConsoleSession::start(int idIn, string hostIn, int portIn, string filenameI
 
 bool ConsoleSession::isExit() { return exit; }
 
+
+
+string ConsoleSession::getHost() { return host; }
+int ConsoleSession::getPort() { return port; }
 vector<CommandResponse> ConsoleSession::getCommandResponseArr() { return commandResponseArr; }
 
 
@@ -63,7 +68,7 @@ void ConsoleSession::onResolve(const boost::system::error_code& errorCode, tcp::
         std::cout << "Error: " << errorCode.message() << "<br/>";
     }
 
-    cout << "id " << id << " resolved<br/>";
+    // cout << "id " << id << " resolved<br/>";
 
     tcp::endpoint endpoint = *iterator;
     socket.async_connect(endpoint, boost::bind(&ConsoleSession::onConnect, shared_from_this(),
@@ -74,7 +79,9 @@ void ConsoleSession::onConnect(const boost::system::error_code& errorCode, tcp::
     if (errorCode) {
         std::cout << "Error: " << errorCode.message() << "<br/>";
     }
-    cout << "id " << id << " connected<br/>";
+
+    // cout << "id " << id << " connected<br/>";
+
     if (iterator != tcp::resolver::iterator()) {
         socket.close();
         tcp::endpoint endpoint = *iterator;
@@ -100,13 +107,15 @@ void ConsoleSession::doRead() {
                                }
 
                                string rawRequest = string(data);
-                               cout << id << " read: " << rawRequest << "<br/>";
+
+                               //    cout << id << " read: " << rawRequest << "<br/>";
+
                                CommandResponse newCommandResponse;
                                newCommandResponse.value = rawRequest;
                                newCommandResponse.type = CommandResponseType::RESPONSE;
                                commandResponseArr.push_back(newCommandResponse);
 
-                               if (rawRequest.substr(0, 2) == "% ") {
+                               if (rawRequest.find("% ") != string::npos) {
                                    doWrite();
                                } else {
                                    doRead();
@@ -124,40 +133,39 @@ void ConsoleSession::doWrite() {
     command += "\n";
     strcpy(data, command.c_str());
 
-    boost::asio::async_write(
-        socket, boost::asio::buffer(data, strlen(data)),
-        [this, self, command](boost::system::error_code errorCode, std::size_t length) {
-            if (errorCode) {
-                cerr << "Write Error! " << errorCode << endl;
-                return;
-            }
-            cout << id << "write: " << command << "<br/>";
+    boost::asio::async_write(socket, boost::asio::buffer(data, strlen(data)),
+                             [this, self, command](boost::system::error_code errorCode, std::size_t length) {
+                                 if (errorCode) {
+                                     cerr << "Write Error! " << errorCode << endl;
+                                     return;
+                                 }
+                                 // cout << id << " write: " << command << "<br/>";
 
-            CommandResponse newCommandResponse;
-            newCommandResponse.value = command;
-            newCommandResponse.type = CommandResponseType::COMMAND;
-            commandResponseArr.push_back(newCommandResponse);
+                                 CommandResponse newCommandResponse;
+                                 newCommandResponse.value = command;
+                                 newCommandResponse.type = CommandResponseType::COMMAND;
+                                 commandResponseArr.push_back(newCommandResponse);
 
-            if (command == "exit\r\n" || command == "exit\n") {
-                cout << "id=" << id << " exiting <br/>";
+                                 if (command == "exit\r\n" || command == "exit\n") {
+                                     // cout << "id=" << id << " exiting <br/>";
 
-                commandResponseArr.push_back(currentCommandResponse);
-                socket.close();
-                scriptFile.close();
+                                     socket.close();
+                                     scriptFile.close();
 
 
-                cout << "id=" << id << "<br/>";
-                for (auto commandResponse : getCommandResponseArr()) {
-                    cout << (commandResponse.type == CommandResponseType::COMMAND ? "COMMAND" : "RESPONSE") << "|"
-                         << commandResponse.value << "|<br/>";
-                }
+                                     // cout << "<br/>id=" << id << " Command and Response<br/>";
+                                     // for (auto commandResponse : getCommandResponseArr()) {
+                                     //     cout << (commandResponse.type == CommandResponseType::COMMAND ?
+                                     //     "COMMAND" : "RESPONSE") << "|"
+                                     //          << commandResponse.value << "|<br/>";
+                                     // }
 
 
-                exit = true;
-            } else {
-                doRead();
-            }
-        });
+                                     exit = true;
+                                 } else {
+                                     doRead();
+                                 }
+                             });
 }
 
 
