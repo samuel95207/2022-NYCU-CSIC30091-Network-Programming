@@ -1,5 +1,6 @@
 #include <boost/asio.hpp>
 #include <cstdlib>
+#include <fstream>
 #include <iostream>
 #include <memory>
 #include <utility>
@@ -14,9 +15,16 @@
 using namespace std;
 using boost::asio::ip::tcp;
 
+enum class CommandResponseType { COMMAND, RESPONSE };
+
+struct CommandResponse {
+    string value;
+    CommandResponseType type;
+};
 
 class ConsoleSession : public enable_shared_from_this<ConsoleSession> {
     static const int BUF_SIZE = 65536;
+    static const string scriptPath;
 
     tcp::socket socket;
     tcp::resolver resolver;
@@ -27,7 +35,15 @@ class ConsoleSession : public enable_shared_from_this<ConsoleSession> {
     string filename;
     HttpRequest request;
 
+    fstream scriptFile;
+
+    vector<CommandResponse> commandResponseArr;
+    CommandResponse currentCommandResponse;
+
     char data[BUF_SIZE];
+
+
+    bool exit = false;
 
 
 
@@ -35,8 +51,13 @@ class ConsoleSession : public enable_shared_from_this<ConsoleSession> {
     ConsoleSession(boost::asio::io_service& io_service);
 
     void start(int idIn, string hostIn, int portIn, string filenameIn, HttpRequest requestIn);
+    bool isExit();
+    vector<CommandResponse> getCommandResponseArr();
+
 
    private:
+    void onResolve(const boost::system::error_code& errorCode, tcp::resolver::iterator iterator);
+    void onConnect(const boost::system::error_code& errorCode, tcp::resolver::iterator iterator);
     void doRead();
     void doWrite();
 

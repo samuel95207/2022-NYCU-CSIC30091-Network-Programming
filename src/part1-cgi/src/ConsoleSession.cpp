@@ -1,4 +1,5 @@
 #include <boost/asio.hpp>
+#include <boost/bind.hpp>
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
@@ -22,6 +23,9 @@
 using namespace std;
 using boost::asio::ip::tcp;
 
+const string ConsoleSession::scriptPath = "./test_case/";
+
+
 
 ConsoleSession::ConsoleSession(boost::asio::io_service& io_service) : socket(io_service), resolver(io_service) {}
 
@@ -31,55 +35,129 @@ void ConsoleSession::start(int idIn, string hostIn, int portIn, string filenameI
     port = portIn;
     filename = filenameIn;
     request = requestIn;
+    exit = false;
 
-    cout << "id = " << id << "<br/>";
 
-    // doRead();
+    cout << "id = " << id << " start!"
+         << "<br/>";
+
+
+    scriptFile.open((scriptPath + filename).c_str(), ios::in);
+
+    cout << "filepath = " << scriptPath + filename << " " << scriptFile.is_open() << "<br/>";
+
+    tcp::resolver::query query(host, to_string(port));
+    cout << "id " << id << " query<br/>";
+
+    resolver.async_resolve(query, boost::bind(&ConsoleSession::onResolve, shared_from_this(),
+                                              boost::asio::placeholders::error, boost::asio::placeholders::iterator));
 }
+
+bool ConsoleSession::isExit() { return exit; }
+
+vector<CommandResponse> ConsoleSession::getCommandResponseArr() { return commandResponseArr; }
+
+
+void ConsoleSession::onResolve(const boost::system::error_code& errorCode, tcp::resolver::iterator iterator) {
+    if (errorCode) {
+        std::cout << "Error: " << errorCode.message() << "<br/>";
+    }
+
+    cout << "id " << id << " resolved<br/>";
+
+    tcp::endpoint endpoint = *iterator;
+    socket.async_connect(endpoint, boost::bind(&ConsoleSession::onConnect, shared_from_this(),
+                                               boost::asio::placeholders::error, ++iterator));
+}
+
+void ConsoleSession::onConnect(const boost::system::error_code& errorCode, tcp::resolver::iterator iterator) {
+    if (errorCode) {
+        std::cout << "Error: " << errorCode.message() << "<br/>";
+    }
+    cout << "id " << id << " connected<br/>";
+    if (iterator != tcp::resolver::iterator()) {
+        socket.close();
+        tcp::endpoint endpoint = *iterator;
+        socket.async_connect(endpoint, boost::bind(&ConsoleSession::onConnect, shared_from_this(),
+                                                   boost::asio::placeholders::error, ++iterator));
+    }
+
+    doRead();
+}
+
 
 void ConsoleSession::doRead() {
     auto self(shared_from_this());
+    strcpy(data, "");
+    memset(data, 0, BUF_SIZE);
+
     socket.async_read_some(boost::asio::buffer(data, BUF_SIZE),
                            [this, self](boost::system::error_code errorCode, size_t length) {
                                if (errorCode) {
+                                   std::cout << "Read Error: " << errorCode.message() << "<br/>";
+                                   socket.close();
                                    return;
                                }
+
                                string rawRequest = string(data);
-                               recvRequest(rawRequest);
-                               doWrite();
+                               cout << id << " read: " << rawRequest << "<br/>";
+                               CommandResponse newCommandResponse;
+                               newCommandResponse.value = rawRequest;
+                               newCommandResponse.type = CommandResponseType::RESPONSE;
+                               commandResponseArr.push_back(newCommandResponse);
+
+                               if (rawRequest.substr(0, 2) == "% ") {
+                                   doWrite();
+                               } else {
+                                   doRead();
+                               }
                            });
 }
 
 void ConsoleSession::doWrite() {
-    // auto self(shared_from_this());
-    // std::strcpy(data, "HTTP/1.1 200 OK\r\n");
-    // boost::asio::async_write(socket, boost::asio::buffer(data, strlen(data)),
-    //                          [this, self](boost::system::error_code errorCode, std::size_t length) {
-    //                              if (errorCode) {
-    //                                  cerr << "Write Error! " << errorCode << endl;
-    //                                  return;
-    //                              }
+    auto self(shared_from_this());
+    strcpy(data, "");
+    memset(data, 0, BUF_SIZE);
 
-    //                              pid_t pid;
-    //                              do {
-    //                                  pid = fork();
-    //                              } while (pid < 0);
+    string command;
+    getline(scriptFile, command);
+    command += "\n";
+    strcpy(data, command.c_str());
 
-    //                              if (pid > 0) {
-    //                                  // Parent Process
-    //                                  socket.close();
-    //                              } else {
-    //                                  dup2(socket.native_handle(), fileno(stdin));
-    //                                  dup2(socket.native_handle(), fileno(stdout));
-    //                                  dup2(socket.native_handle(), fileno(stderr));
-    //                                  socket.close();
+    boost::asio::async_write(
+        socket, boost::asio::buffer(data, strlen(data)),
+        [this, self, command](boost::system::error_code errorCode, std::size_t length) {
+            if (errorCode) {
+                cerr << "Write Error! " << errorCode << endl;
+                return;
+            }
+            cout << id << "write: " << command << "<br/>";
 
-    //                                  string cgiPath = "." + request.uriOnly;
-    //                                  if (execlp(cgiPath.c_str(), cgiPath.c_str(), NULL) < 0) {
-    //                                      std::cerr << "Content-type:text/html\r\n\r\n<h1>Error! CGI not exist</h1>";
-    //                                  }
-    //                              }
-    //                          });
+            CommandResponse newCommandResponse;
+            newCommandResponse.value = command;
+            newCommandResponse.type = CommandResponseType::COMMAND;
+            commandResponseArr.push_back(newCommandResponse);
+
+            if (command == "exit\r\n" || command == "exit\n") {
+                cout << "id=" << id << " exiting <br/>";
+
+                commandResponseArr.push_back(currentCommandResponse);
+                socket.close();
+                scriptFile.close();
+
+
+                cout << "id=" << id << "<br/>";
+                for (auto commandResponse : getCommandResponseArr()) {
+                    cout << (commandResponse.type == CommandResponseType::COMMAND ? "COMMAND" : "RESPONSE") << "|"
+                         << commandResponse.value << "|<br/>";
+                }
+
+
+                exit = true;
+            } else {
+                doRead();
+            }
+        });
 }
 
 

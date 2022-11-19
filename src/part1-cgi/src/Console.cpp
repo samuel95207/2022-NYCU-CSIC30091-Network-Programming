@@ -16,7 +16,6 @@ using namespace std;
 
 void Console::start() {
     try {
-        io_context.run();
 
         getCgiEnv();
 
@@ -40,6 +39,18 @@ void Console::start() {
 
             ptr->start(id, shellHost, shellPort, shellFilename, request);
         }
+
+        io_context.run();
+        // while (true) {
+        //     for (auto sessionPair : sessions) {
+        //         if (sessionPair.second->isExit()) {
+        //             cout << "id=" << sessionPair.first << "<br/>";
+        //             for (auto commandResponse : sessionPair.second->getCommandResponseArr()) {
+        //                 cout << commandResponse.command << "|" << commandResponse.response << "<br/>";
+        //             }
+        //         }
+        //     }
+        // }
     } catch (std::exception& e) {
         cerr << "Exception: " << e.what() << "<br/>";
     }
