@@ -25,6 +25,8 @@ clean: clean1 clean2
 	rm -f console.cgi
 	rm -f cgi_server.exe
 
+run_np_single:
+	@cd working_dir_np_single;./np_single_golden 10000
 
 run1: part1
 	@$(MAKE) run -C src/part1-cgi
