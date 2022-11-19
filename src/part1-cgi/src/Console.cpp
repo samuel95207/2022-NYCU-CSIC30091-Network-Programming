@@ -40,7 +40,6 @@ void Console::start() {
 
         io_context.run();
 
-        renderBaseHtml();
 
         while (true) {
             bool exit = true;
@@ -51,18 +50,8 @@ void Console::start() {
                 break;
             }
         }
-        for (auto sessionPair : sessions) {
-            for (auto commandResponse : sessionPair.second->getCommandResponseArr()) {
-                // cout << (commandResponse.type == CommandResponseType::COMMAND ? "COMMAND" : "RESPONSE") << "|"
-                //      << commandResponse.value << "|<br/>";
-                if (commandResponse.type == CommandResponseType::COMMAND) {
-                    renderCommand(sessionPair.first, commandResponse.value);
-                } else {
-                    renderResponse(sessionPair.first, commandResponse.value);
-                }
-            }
-        }
 
+        renderHtml();
 
     } catch (std::exception& e) {
         cerr << "Exception: " << e.what() << "<br/>";
@@ -99,7 +88,7 @@ void Console::getCgiEnv() {
 }
 
 
-void Console::renderBaseHtml() {
+void Console::renderHtml() {
     cout << "HTTP/1.1 200 OK\r\n"
             "Content-type:text/html\r\n\r\n"
             "<!DOCTYPE html>"
@@ -151,7 +140,15 @@ void Console::renderBaseHtml() {
             "      <tbody>"
             "        <tr>";
     for (auto sessionPair : sessions) {
-        cout << "<td><pre id=\"s" << sessionPair.first << "\" class=\"mb-0\"></pre></td>";
+        cout << "<td><pre id=\"s" << sessionPair.first << "\" class=\"mb-0\">";
+        for (auto commandResponse : sessionPair.second->getCommandResponseArr()) {
+            if (commandResponse.type == CommandResponseType::COMMAND) {
+                cout << renderCommand(commandResponse.value);
+            } else {
+                cout << renderResponse(commandResponse.value);
+            }
+        }
+        cout << "</pre></td>";
     }
     cout << "        </tr>"
             "      </tbody>"
@@ -162,14 +159,12 @@ void Console::renderBaseHtml() {
 }
 
 
-void Console::renderCommand(int id, string value) {
+string Console::renderCommand(string value) {
     value = regex_replace(value, std::regex("\n"), "&NewLine;");
-    cout << "<script>document.getElementById('s" << id << "').innerHTML += '<b>" << value << "</b>';</script>";
-    cout.flush();
+    return string("<b>") + value + string("</b>");
 }
 
-void Console::renderResponse(int id, string value) {
+string Console::renderResponse(string value) {
     value = regex_replace(value, std::regex("\n"), "&NewLine;");
-    cout << "<script>document.getElementById('s" << id << "').innerHTML += '" << value << "';</script>";
-    cout.flush();
+    return value;
 }

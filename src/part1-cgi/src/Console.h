@@ -26,11 +26,11 @@ class Console {
 
    public:
     void start();
+    string renderCommand(string value);
+    string renderResponse(string value);
 
    private:
     void getCgiEnv();
-    void renderBaseHtml();
-    void renderCommand(int id, string value);
-    void renderResponse(int id, string value);
+    void renderHtml();
 
 };

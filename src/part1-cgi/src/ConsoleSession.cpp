@@ -14,6 +14,11 @@
 #include "ConsoleSession.h"
 #endif
 
+#ifndef _CONSOLE_H_
+#define _CONSOLE_H_
+#include "Console.h"
+#endif
+
 
 #ifndef _HTTP_REQUEST_H_
 #define _HTTP_REQUEST_H_
@@ -130,6 +135,9 @@ void ConsoleSession::doWrite() {
 
     string command;
     getline(scriptFile, command);
+    if (command[command.length() - 1] == '\r') {
+        command.erase(command.length() - 1);
+    }
     command += "\n";
     strcpy(data, command.c_str());
 
