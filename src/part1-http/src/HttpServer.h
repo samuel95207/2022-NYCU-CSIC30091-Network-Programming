@@ -15,4 +15,5 @@ class HttpServer {
 
    private:
     void doAccept();
+    static void childSignalHandler(int signum);
 };

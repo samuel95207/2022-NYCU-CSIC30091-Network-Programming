@@ -1,8 +1,11 @@
+#include <sys/wait.h>
+
 #include <boost/asio.hpp>
 #include <cstdlib>
 #include <iostream>
 #include <memory>
 #include <utility>
+
 
 #ifndef _HTTP_SERVER_H_
 #define _HTTP_SERVER_H_
@@ -20,6 +23,7 @@ using boost::asio::ip::tcp;
 
 HttpServer::HttpServer(boost::asio::io_context& io_context, int port)
     : port(port), acceptor(io_context, tcp::endpoint(tcp::v4(), port)) {
+    signal(SIGCHLD, HttpServer::childSignalHandler);
     doAccept();
 }
 
@@ -30,4 +34,10 @@ void HttpServer::doAccept() {
         }
         doAccept();
     });
+}
+
+void HttpServer::childSignalHandler(int signum) {
+    int status;
+    while (waitpid(-1, &status, WNOHANG) > 0) {
+    }
 }
