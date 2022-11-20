@@ -15,6 +15,8 @@
 using namespace std;
 using boost::asio::ip::tcp;
 
+class Console;
+
 enum class CommandResponseType { COMMAND, RESPONSE };
 
 struct CommandResponse {
@@ -28,6 +30,8 @@ class ConsoleSession : public enable_shared_from_this<ConsoleSession> {
 
     tcp::socket socket;
     tcp::resolver resolver;
+
+    Console* console;
 
     int id;
     string host;
@@ -48,7 +52,7 @@ class ConsoleSession : public enable_shared_from_this<ConsoleSession> {
 
 
    public:
-    ConsoleSession(boost::asio::io_service& io_service);
+    ConsoleSession(boost::asio::io_service& io_service, Console* console);
 
     void start(int idIn, string hostIn, int portIn, string filenameIn, HttpRequest requestIn);
     bool isExit();

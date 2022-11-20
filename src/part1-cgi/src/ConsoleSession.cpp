@@ -32,7 +32,8 @@ const string ConsoleSession::scriptPath = "./test_case/";
 
 
 
-ConsoleSession::ConsoleSession(boost::asio::io_service& io_service) : socket(io_service), resolver(io_service) {}
+ConsoleSession::ConsoleSession(boost::asio::io_service& io_service, Console* console)
+    : socket(io_service), resolver(io_service), console(console) {}
 
 void ConsoleSession::start(int idIn, string hostIn, int portIn, string filenameIn, HttpRequest requestIn) {
     id = idIn;
@@ -44,7 +45,6 @@ void ConsoleSession::start(int idIn, string hostIn, int portIn, string filenameI
 
 
     // cout << "id = " << id << " start!"
-    //      << "<br/>";
 
 
     scriptFile.open((scriptPath + filename).c_str(), ios::in);
@@ -123,6 +123,7 @@ void ConsoleSession::doRead() {
                                if (rawRequest.find("% ") != string::npos) {
                                    doWrite();
                                } else {
+                                   console->renderHtml();
                                    doRead();
                                }
                            });
@@ -157,7 +158,7 @@ void ConsoleSession::doWrite() {
                                  if (command == "exit\r\n" || command == "exit\n") {
                                      // cout << "id=" << id << " exiting <br/>";
 
-                                     socket.close();
+                                    //  socket.close();
                                      scriptFile.close();
 
 

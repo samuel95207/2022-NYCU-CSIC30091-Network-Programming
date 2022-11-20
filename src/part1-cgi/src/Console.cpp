@@ -38,7 +38,7 @@ void Console::start() {
             int shellPort = stoi(request.queryMap[string("p") + to_string(id)]);
             string shellFilename = request.queryMap[string("f") + to_string(id)];
 
-            shared_ptr<ConsoleSession> ptr = std::make_shared<ConsoleSession>(io_context);
+            shared_ptr<ConsoleSession> ptr = std::make_shared<ConsoleSession>(io_context, this);
             sessions[id] = ptr;
 
             ptr->start(id, shellHost, shellPort, shellFilename, request);
@@ -99,6 +99,7 @@ void Console::renderHtml() {
             "Content-type:text/html\r\n\r\n"
             "<!DOCTYPE html>"
             "<html lang=\"en\">"
+            "  <script>document.getElementById('body').innerHTML = ''</script>"
             "  <head>"
             "    <meta charset=\"UTF-8\" />"
             "    <title>NP Project 3 Sample Console</title>"
@@ -133,7 +134,7 @@ void Console::renderHtml() {
             "      }"
             "    </style>"
             "  </head>"
-            "  <body>"
+            "  <body id='body'>"
             "    <table class=\"table table-dark table-bordered\">"
             "      <thead>"
             "        <tr>";
