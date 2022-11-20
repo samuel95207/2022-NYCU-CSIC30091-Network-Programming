@@ -44,16 +44,14 @@ void ConsoleSession::start(int idIn, string hostIn, int portIn, string filenameI
     exit = false;
 
 
-    // cout << "id = " << id << " start!"
-
-
     scriptFile.open((scriptPath + filename).c_str(), ios::in);
-
-    // cout << "filepath = " << scriptPath + filename << " " << scriptFile.is_open() << "<br/>";
+    if (!scriptFile.is_open()) {
+        addOutput(string("File Open Error! Cannot open file ") + scriptPath + filename + ".\n", OutputType::ERROR);
+        exitSession();
+        return;
+    }
 
     tcp::resolver::query query(host, to_string(port));
-
-    // cout << "id " << id << " query<br/>";
 
     resolver.async_resolve(query, boost::bind(&ConsoleSession::onResolve, shared_from_this(),
                                               boost::asio::placeholders::error, boost::asio::placeholders::iterator));
@@ -65,15 +63,15 @@ bool ConsoleSession::isExit() { return exit; }
 
 string ConsoleSession::getHost() { return host; }
 int ConsoleSession::getPort() { return port; }
-vector<CommandResponse> ConsoleSession::getCommandResponseArr() { return commandResponseArr; }
+vector<Output> ConsoleSession::getOutputArr() { return commandResponseArr; }
 
 
 void ConsoleSession::onResolve(const boost::system::error_code& errorCode, tcp::resolver::iterator iterator) {
     if (errorCode) {
-        std::cout << "Error: " << errorCode.message() << "<br/>";
+        addOutput(string("Resolve Error: ") + errorCode.message() + "\n", OutputType::ERROR);
+        exitSession();
+        return;
     }
-
-    // cout << "id " << id << " resolved<br/>";
 
     tcp::endpoint endpoint = *iterator;
     socket.async_connect(endpoint, boost::bind(&ConsoleSession::onConnect, shared_from_this(),
@@ -82,10 +80,11 @@ void ConsoleSession::onResolve(const boost::system::error_code& errorCode, tcp::
 
 void ConsoleSession::onConnect(const boost::system::error_code& errorCode, tcp::resolver::iterator iterator) {
     if (errorCode) {
-        std::cout << "Error: " << errorCode.message() << "<br/>";
+        addOutput(string("Connect Error: ") + errorCode.message() + "\n", OutputType::ERROR);
+        exitSession();
+        return;
     }
 
-    // cout << "id " << id << " connected<br/>";
 
     if (iterator != tcp::resolver::iterator()) {
         socket.close();
@@ -106,8 +105,8 @@ void ConsoleSession::doRead() {
     socket.async_read_some(boost::asio::buffer(data, BUF_SIZE),
                            [this, self](boost::system::error_code errorCode, size_t length) {
                                if (errorCode) {
-                                   std::cout << "Read Error: " << errorCode.message() << "<br/>";
-                                   socket.close();
+                                   addOutput(string("Read Error: ") + errorCode.message() + "\n", OutputType::ERROR);
+                                   exitSession();
                                    return;
                                }
 
@@ -115,15 +114,12 @@ void ConsoleSession::doRead() {
 
                                //    cout << id << " read: " << rawRequest << "<br/>";
 
-                               CommandResponse newCommandResponse;
-                               newCommandResponse.value = rawRequest;
-                               newCommandResponse.type = CommandResponseType::RESPONSE;
-                               commandResponseArr.push_back(newCommandResponse);
+
+                               addOutput(rawRequest, OutputType::RESPONSE);
 
                                if (rawRequest.find("% ") != string::npos) {
                                    doWrite();
                                } else {
-                                   console->renderHtml();
                                    doRead();
                                }
                            });
@@ -145,32 +141,20 @@ void ConsoleSession::doWrite() {
     boost::asio::async_write(socket, boost::asio::buffer(data, strlen(data)),
                              [this, self, command](boost::system::error_code errorCode, std::size_t length) {
                                  if (errorCode) {
-                                     cerr << "Write Error! " << errorCode << endl;
+                                     addOutput(string("Write Error: ") + errorCode.message() + "\n", OutputType::ERROR);
+                                     exitSession();
                                      return;
                                  }
-                                 // cout << id << " write: " << command << "<br/>";
 
-                                 CommandResponse newCommandResponse;
-                                 newCommandResponse.value = command;
-                                 newCommandResponse.type = CommandResponseType::COMMAND;
-                                 commandResponseArr.push_back(newCommandResponse);
+                                 addOutput(command, OutputType::COMMAND);
 
                                  if (command == "exit\r\n" || command == "exit\n") {
-                                     // cout << "id=" << id << " exiting <br/>";
-
-                                    //  socket.close();
+                                     socket.close();
                                      scriptFile.close();
 
+                                     exitSession();
+                                     return;
 
-                                     // cout << "<br/>id=" << id << " Command and Response<br/>";
-                                     // for (auto commandResponse : getCommandResponseArr()) {
-                                     //     cout << (commandResponse.type == CommandResponseType::COMMAND ?
-                                     //     "COMMAND" : "RESPONSE") << "|"
-                                     //          << commandResponse.value << "|<br/>";
-                                     // }
-
-
-                                     exit = true;
                                  } else {
                                      doRead();
                                  }
@@ -185,4 +169,17 @@ void ConsoleSession::recvRequest(string rawRequest) {
     request.print();
     cout << "REMOTE_ADDR = " << socket.remote_endpoint().address().to_string().c_str() << endl;
     cout << "REMOTE_PORT = " << to_string(socket.remote_endpoint().port()).c_str() << endl;
+}
+
+void ConsoleSession::addOutput(string output, OutputType type) {
+    Output newOutput;
+    newOutput.value = output;
+    newOutput.type = type;
+    commandResponseArr.push_back(newOutput);
+    console->renderHtml();
+}
+
+void ConsoleSession::exitSession() {
+    exit = true;
+    socket.close();
 }

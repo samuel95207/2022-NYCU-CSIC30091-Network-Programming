@@ -132,6 +132,9 @@ void Console::renderHtml() {
             "      b {"
             "        color: #01b468;"
             "      }"
+            "      .error {"
+            "        color: #f14c4c;"
+            "      }"
             "    </style>"
             "  </head>"
             "  <body id='body'>"
@@ -148,11 +151,13 @@ void Console::renderHtml() {
             "        <tr>";
     for (auto sessionPair : sessions) {
         cout << "<td><pre id=\"s" << sessionPair.first << "\" class=\"mb-0\">";
-        for (auto commandResponse : sessionPair.second->getCommandResponseArr()) {
-            if (commandResponse.type == CommandResponseType::COMMAND) {
-                cout << renderCommand(commandResponse.value);
-            } else {
-                cout << renderResponse(commandResponse.value);
+        for (auto output : sessionPair.second->getOutputArr()) {
+            if (output.type == OutputType::COMMAND) {
+                cout << renderCommand(output.value);
+            } else if (output.type == OutputType::RESPONSE) {
+                cout << renderResponse(output.value);
+            } else if (output.type == OutputType::ERROR) {
+                cout << renderError(output.value);
             }
         }
         cout << "</pre></td>";
@@ -180,4 +185,12 @@ string Console::renderResponse(string value) {
         value = regex_replace(value, std::regex(escape.first), escape.second);
     }
     return value;
+}
+
+string Console::renderError(string value) {
+    value = regex_replace(value, std::regex("&"), "&amp;");
+    for (auto escape : htmlEscapeMap) {
+        value = regex_replace(value, std::regex(escape.first), escape.second);
+    }
+    return string("<b class='error'>") + value + string("</b>");
 }
