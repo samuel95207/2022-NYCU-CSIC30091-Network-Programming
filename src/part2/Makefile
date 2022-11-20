@@ -1,3 +1,14 @@
+ifeq ($(OS), Windows_NT)
+	MAKEDIR = powershell IF(-not (Test-Path $(1))){mkdir $(1)}
+	REMOVE = powershell IF(Test-Path $(1)){rm -r -fo $(1)}
+	COPY = Copy
+else
+	MAKEDIR = mkdir -p $(1)
+	REMOVE = rm -rf $(1)
+	COPY = cp
+endif
+
+
 TARGET = ./cgi_server.exe
 
 SRC_DIR = ./src
@@ -31,13 +42,13 @@ all : $(TARGET)
 	@echo "Done"
 
 $(TARGET) : $(OBJS)
-	@mkdir -p $(@D)
+	@$(call MAKEDIR,$(@D))
 	@echo "Linking" $@ "from" $^ "..."
 	$(LD) -o $@ $^ $(LD_FLAGS) $(LD_LIBS) $(C_FLAGS)
 	@echo "Link finished"
 
 $(OBJS) : $(OBJ_DIR)/%.o:%.$(TYPE)
-	@mkdir -p $(@D)
+	@$(call MAKEDIR,$(@D))
 	@echo "Compiling" $@ "from" $< "..."
 	$(CC) -c -o $@ $< $(INCLUDES) $(LIBS) $(C_FLAGS)
 	@echo "Compile finished"
@@ -45,11 +56,12 @@ $(OBJS) : $(OBJ_DIR)/%.o:%.$(TYPE)
 .PHONY : clean cleanobj
 clean : cleanobj
 	@echo "Remove all executable files and output files"
-	rm -f $(TARGET)
+	@$(call REMOVE,$(TARGET))
+	
 
 cleanobj :
 	@echo "Remove object files"
-	rm -rf $(OBJ_DIR)/*.o
+	@$(call REMOVE,$(OBJ_DIR)/*.o)
 
 run:
 	@make

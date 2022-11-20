@@ -1,29 +1,42 @@
+ifeq ($(OS), Windows_NT)
+	MAKEDIR = powershell IF(-not (Test-Path $(1))){mkdir $(1)}
+	REMOVE = powershell IF(Test-Path $(1)){rm -r -fo $(1)}
+	COPY = Copy
+else
+	MAKEDIR = mkdir -p $(1)
+	REMOVE = rm -rf $(1)
+	COPY = cp
+endif
+
+
+
 MAKE=make
 
 part1:
 	@$(MAKE) -C src/part1-http
 	@$(MAKE) -C src/part1-cgi
-	@cp src/part1-http/http_server ./http_server
-	@cp src/part1-cgi/console.cgi ./console.cgi
+	@$(COPY) ./src/part1-http/http_server ./http_server
+	@$(COPY) ./src/part1-cgi/console.cgi ./console.cgi
 
 
 part2:
 	@$(MAKE) -C src/part2
-	@cp src/part2/cgi_server.exe ./cgi_server.exe
+	@$(COPY) ".\src\part2\cgi_server.exe" ".\cgi_server.exe"
 
 
 clean1:
-	@$(MAKE) clean -C src/part1-http
-	@$(MAKE) clean -C src/part1-cgi
+	@-$(MAKE) clean -C src/part1-http
+	@-$(MAKE) clean -C src/part1-cgi
 
 clean2:
-	@$(MAKE) clean -C src/part2
+	@-$(MAKE) clean -C src/part2
 
 
 clean: clean1 clean2
-	rm -f http_server
-	rm -f console.cgi
-	rm -f cgi_server.exe
+	@-$(call REMOVE,http_server)	 
+	@-$(call REMOVE,console.cgi)
+	@-$(call REMOVE,cgi_server.exe)
+
 
 run_np_single:
 	@cd working_dir_np_single;./np_single_golden 10000
