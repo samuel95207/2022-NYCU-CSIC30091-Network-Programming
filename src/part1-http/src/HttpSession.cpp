@@ -42,35 +42,39 @@ void HttpSession::doRead() {
 
 void HttpSession::doWrite() {
     auto self(shared_from_this());
-    std::strcpy(data, "HTTP/1.1 200 OK\r\n");
-    boost::asio::async_write(socket, boost::asio::buffer(data, strlen(data)),
-                             [this, self](boost::system::error_code errorCode, std::size_t length) {
-                                 if (errorCode) {
-                                     cerr << "Write Error! " << errorCode << endl;
-                                     return;
-                                 }
+    strcpy(data, "HTTP/1.1 200 OK\r\n");
+    boost::asio::async_write(
+        socket, boost::asio::buffer(data, strlen(data)),
+        [this, self](boost::system::error_code errorCode, std::size_t length) {
+            if (errorCode) {
+                cerr << "HTTP/1.1 500 Internal Server Error\r\n";
+                cerr << "Write Error! " << errorCode << endl;
+                return;
+            }
 
-                                 pid_t pid;
-                                 do {
-                                     pid = fork();
-                                 } while (pid < 0);
+            pid_t pid;
+            do {
+                pid = fork();
+            } while (pid < 0);
 
-                                 if (pid > 0) {
-                                     // Parent Process
-                                     socket.close();
-                                 } else {
-                                     setCgiEnv();
-                                     dup2(socket.native_handle(), fileno(stdin));
-                                     dup2(socket.native_handle(), fileno(stdout));
-                                     dup2(socket.native_handle(), fileno(stderr));
-                                     socket.close();
+            if (pid > 0) {
+                // Parent Process
+                socket.close();
+            } else {
+                setCgiEnv();
+                dup2(socket.native_handle(), fileno(stdin));
+                dup2(socket.native_handle(), fileno(stdout));
+                dup2(socket.native_handle(), fileno(stderr));
+                socket.close();
 
-                                     string cgiPath = "." + request.uriOnly;
-                                     if (execlp(cgiPath.c_str(), cgiPath.c_str(), NULL) < 0) {
-                                         std::cerr << "Content-type:text/html\r\n\r\n<h1>Error! CGI not exist</h1>";
-                                     }
-                                 }
-                             });
+                string cgiPath = "." + request.uriOnly;
+                if (execlp(cgiPath.c_str(), cgiPath.c_str(), NULL) < 0) {
+                    cerr << "HTTP/1.1 404 Not Found\r\n";
+                    cerr << "Content-type:text/html\r\n\r\n<h1>404 Not Found!</h1><h2>CGI does not exist.</h2>";
+                    exit(0);
+                }
+            }
+        });
 }
 
 
