@@ -19,6 +19,16 @@
 #include "HttpRequest.h"
 #endif
 
+#ifndef _CONSOLE_H_
+#define _CONSOLE_H_
+#include "ConsoleCgi/Console.h"
+#endif
+
+#ifndef _PANEL_H_
+#define _PANEL_H_
+#include "PanelCgi/Panel.h"
+#endif
+
 using namespace std;
 using boost::asio::ip::tcp;
 
@@ -50,15 +60,40 @@ void HttpSession::doWrite() {
                                      return;
                                  }
 
+                                 if (request.uriOnly == "/panel.cgi") {
+                                     make_shared<Panel>(std::move(socket))->start(request);
+                                 } else if (request.uriOnly == "/console.cgi") {
+                                     make_shared<Console>(std::move(socket))->start(request);
+                                 }
+
+
+
+                                 //  pid_t pid;
+                                 //  do {
+                                 //      pid = fork();
+                                 //  } while (pid < 0);
+
+                                 //  if (pid > 0) {
+                                 //      // Parent Process
+                                 //      socket.close();
+                                 //  } else {
+
+                                 //      socket.close();
+
+                                 //      string cgiPath = "." + request.uriOnly;
+                                 //      if (execlp(cgiPath.c_str(), cgiPath.c_str(), NULL) < 0) {
+                                 //          std::cerr << "Content-type:text/html\r\n\r\n<h1>Error! CGI not exist</h1>";
+                                 //      }
+                                 //  }
                              });
 }
 
 
 void HttpSession::recvRequest(string rawRequest) {
-    cout << rawRequest << endl;
+    // cout << rawRequest << endl;
     request = HttpRequest::parse(rawRequest);
 
-    request.print();
-    cout << "REMOTE_ADDR = " << socket.remote_endpoint().address().to_string().c_str() << endl;
-    cout << "REMOTE_PORT = " << to_string(socket.remote_endpoint().port()).c_str() << endl;
+    // request.print();
+    // cout << "REMOTE_ADDR = " << socket.remote_endpoint().address().to_string().c_str() << endl;
+    // cout << "REMOTE_PORT = " << to_string(socket.remote_endpoint().port()).c_str() << endl;
 }

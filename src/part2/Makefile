@@ -1,7 +1,7 @@
 TARGET = ./cgi_server.exe
 
 SRC_DIR = ./src
-SRC_SUBDIR += . 
+SRC_SUBDIR += . ConsoleCgi PanelCgi
 INCLUDE_DIR = 
 LIB_DIR = 
 OBJ_DIR = ./src/obj
