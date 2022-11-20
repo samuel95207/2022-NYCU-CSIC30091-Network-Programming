@@ -60,3 +60,5 @@ examples/boost_asio_example/echo_server
 http_server
 console.cgi
 cgi_server.exe
+
+*.zip
