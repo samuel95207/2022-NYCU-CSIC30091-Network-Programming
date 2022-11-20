@@ -21,7 +21,9 @@ part1:
 
 part2:
 	@$(MAKE) -C src/part2
-	@$(COPY) ".\src\part2\cgi_server.exe" ".\cgi_server.exe"
+	@-$(COPY) ".\src\part2\cgi_server.exe" ".\cgi_server.exe"
+	@-cp ".\src\part2\cgi_server.exe" ".\cgi_server.exe"
+
 
 
 clean1:
@@ -36,6 +38,10 @@ clean: clean1 clean2
 	@-$(call REMOVE,http_server)	 
 	@-$(call REMOVE,console.cgi)
 	@-$(call REMOVE,cgi_server.exe)
+	@-rm http_server
+	@-rm console.cgi
+	@-rm cgi_server.exe
+
 
 
 run_np_single:

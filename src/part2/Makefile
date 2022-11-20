@@ -42,13 +42,15 @@ all : $(TARGET)
 	@echo "Done"
 
 $(TARGET) : $(OBJS)
-	@$(call MAKEDIR,$(@D))
+	@-$(call MAKEDIR,$(@D))
+	@-mkdir -p $(@D)
 	@echo "Linking" $@ "from" $^ "..."
 	$(LD) -o $@ $^ $(LD_FLAGS) $(LD_LIBS) $(C_FLAGS)
 	@echo "Link finished"
 
 $(OBJS) : $(OBJ_DIR)/%.o:%.$(TYPE)
-	@$(call MAKEDIR,$(@D))
+	@-$(call MAKEDIR,$(@D))
+	@-mkdir -p $(@D)
 	@echo "Compiling" $@ "from" $< "..."
 	$(CC) -c -o $@ $< $(INCLUDES) $(LIBS) $(C_FLAGS)
 	@echo "Compile finished"
@@ -56,12 +58,14 @@ $(OBJS) : $(OBJ_DIR)/%.o:%.$(TYPE)
 .PHONY : clean cleanobj
 clean : cleanobj
 	@echo "Remove all executable files and output files"
-	@$(call REMOVE,$(TARGET))
+	@-$(call REMOVE,$(TARGET))
+	@-rm $(TARGET)
 	
 
 cleanobj :
 	@echo "Remove object files"
-	@$(call REMOVE,$(OBJ_DIR)/*.o)
+	@-$(call REMOVE,$(OBJ_DIR)/*.o)
+	@-rm $(OBJ_DIR)/*.o
 
 run:
 	@make
