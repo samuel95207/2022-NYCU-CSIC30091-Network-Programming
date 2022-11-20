@@ -16,7 +16,7 @@ using boost::asio::ip::tcp;
 
 
 class HttpSession : public enable_shared_from_this<HttpSession> {
-    static const int BUF_SIZE = 65536;
+    static const int BUF_SIZE = 1048576;
 
     int port;
     tcp::socket socket;

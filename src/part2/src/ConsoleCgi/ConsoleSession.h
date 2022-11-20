@@ -25,7 +25,7 @@ struct CommandResponse {
 };
 
 class ConsoleSession : public enable_shared_from_this<ConsoleSession> {
-    static const int BUF_SIZE = 65536;
+    static const int BUF_SIZE = 1048576;
     static const string scriptPath;
 
     tcp::socket socket;

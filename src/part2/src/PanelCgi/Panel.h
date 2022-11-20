@@ -17,7 +17,7 @@ using boost::asio::ip::tcp;
 
 class Panel : public enable_shared_from_this<Panel> {
     static map<string, string> htmlEscapeMap;
-    static const int BUF_SIZE = 65536;
+    static const int BUF_SIZE = 1048576;
 
 
     tcp::socket socket;
