@@ -63,6 +63,7 @@ zip:
 	@cp src/part1-cgi/Makefile 311511034/src/part1-cgi/
 	@cp src/part1-cgi/src/*.cpp 311511034/src/part1-cgi/src
 	@cp src/part1-cgi/src/*.h 311511034/src/part1-cgi/src
+	@cp src/part2/Makefile 311511034/src/part2/Makefile
 	@cp -r src/part2/src/* 311511034/src/part2/src
 	@rm -rf 311511034/src/part2/obj
 	@cp Makefile 311511034
