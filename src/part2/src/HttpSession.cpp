@@ -64,33 +64,32 @@ void HttpSession::doWrite() {
                                      make_shared<Panel>(std::move(socket))->start(request);
                                  } else if (request.uriOnly == "/console.cgi") {
                                      make_shared<Console>(std::move(socket))->start(request);
+                                 } else {
+                                     doWrite(
+                                         "HTTP/1.1 404 Not Found\r\n"
+                                         "Content-type:text/html\r\n\r\n"
+                                         "<h1>404 Not Found!</h1>"
+                                         "<h2>CGI does not exist.</h2>");
                                  }
+                             });
+}
 
-
-
-                                 //  pid_t pid;
-                                 //  do {
-                                 //      pid = fork();
-                                 //  } while (pid < 0);
-
-                                 //  if (pid > 0) {
-                                 //      // Parent Process
-                                 //      socket.close();
-                                 //  } else {
-
-                                 //      socket.close();
-
-                                 //      string cgiPath = "." + request.uriOnly;
-                                 //      if (execlp(cgiPath.c_str(), cgiPath.c_str(), NULL) < 0) {
-                                 //          std::cerr << "Content-type:text/html\r\n\r\n<h1>Error! CGI not exist</h1>";
-                                 //      }
-                                 //  }
+void HttpSession::doWrite(string value) {
+    auto self(shared_from_this());
+    std::strcpy(data, value.c_str());
+    boost::asio::async_write(socket, boost::asio::buffer(data, strlen(data)),
+                             [this, self](boost::system::error_code errorCode, std::size_t length) {
+                                 if (errorCode) {
+                                     cerr << "Write Error! " << errorCode << endl;
+                                     return;
+                                 }
                              });
 }
 
 
+
 void HttpSession::recvRequest(string rawRequest) {
-    // cout << rawRequest << endl;
+    cout << rawRequest << endl;
     request = HttpRequest::parse(rawRequest);
 
     // request.print();

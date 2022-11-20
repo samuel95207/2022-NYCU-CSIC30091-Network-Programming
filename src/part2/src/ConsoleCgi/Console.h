@@ -38,9 +38,8 @@ class Console : public enable_shared_from_this<Console> {
     void start(const HttpRequest& requestIn);
 
     void writeSocket(string message);
+    void renderHtml();
     string renderCommand(string value);
     string renderResponse(string value);
-
-   private:
-    void renderHtml();
+    string renderError(string value);
 };

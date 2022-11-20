@@ -17,11 +17,11 @@ using boost::asio::ip::tcp;
 
 class Console;
 
-enum class CommandResponseType { COMMAND, RESPONSE };
+enum class OutputType { COMMAND, RESPONSE, ERRORMSG };
 
-struct CommandResponse {
+struct Output {
     string value;
-    CommandResponseType type;
+    OutputType type;
 };
 
 class ConsoleSession : public enable_shared_from_this<ConsoleSession> {
@@ -41,8 +41,8 @@ class ConsoleSession : public enable_shared_from_this<ConsoleSession> {
 
     fstream scriptFile;
 
-    vector<CommandResponse> commandResponseArr;
-    CommandResponse currentCommandResponse;
+    vector<Output> commandResponseArr;
+    Output currentOutput;
 
     char data[BUF_SIZE];
 
@@ -60,7 +60,7 @@ class ConsoleSession : public enable_shared_from_this<ConsoleSession> {
 
     string getHost();
     int getPort();
-    vector<CommandResponse> getCommandResponseArr();
+    vector<Output> getOutputArr();
 
 
 
@@ -72,4 +72,6 @@ class ConsoleSession : public enable_shared_from_this<ConsoleSession> {
     void doWrite();
 
     void recvRequest(string rawRequest);
+    void addOutput(string output, OutputType type);
+    void exitSession();
 };

@@ -85,7 +85,10 @@ void Console::writeSocket(string message) {
 void Console::renderHtml() {
     ostringstream oss;
     oss << "<!DOCTYPE html>"
+           "Content-type:text/html\r\n\r\n"
+           "<!DOCTYPE html>"
            "<html lang=\"en\">"
+           "  <script>document.getElementById('body').innerHTML = ''</script>"
            "  <head>"
            "    <meta charset=\"UTF-8\" />"
            "    <title>NP Project 3 Sample Console</title>"
@@ -118,9 +121,12 @@ void Console::renderHtml() {
            "      b {"
            "        color: #01b468;"
            "      }"
+           "      .error {"
+           "        color: #f14c4c;"
+           "      }"
            "    </style>"
            "  </head>"
-           "  <body>"
+           "  <body id='body'>"
            "    <table class=\"table table-dark table-bordered\">"
            "      <thead>"
            "        <tr>";
@@ -133,11 +139,13 @@ void Console::renderHtml() {
            "        <tr>";
     for (auto sessionPair : sessions) {
         oss << "<td><pre id=\"s" << sessionPair.first << "\" class=\"mb-0\">";
-        for (auto commandResponse : sessionPair.second->getCommandResponseArr()) {
-            if (commandResponse.type == CommandResponseType::COMMAND) {
-                oss << renderCommand(commandResponse.value);
-            } else {
-                oss << renderResponse(commandResponse.value);
+        for (auto output : sessionPair.second->getOutputArr()) {
+            if (output.type == OutputType::COMMAND) {
+                oss << renderCommand(output.value);
+            } else if (output.type == OutputType::RESPONSE) {
+                oss << renderResponse(output.value);
+            } else if (output.type == OutputType::ERRORMSG) {
+                oss << renderError(output.value);
             }
         }
         oss << "</pre></td>";
@@ -166,4 +174,12 @@ string Console::renderResponse(string value) {
         value = regex_replace(value, std::regex(escape.first), escape.second);
     }
     return value;
+}
+
+string Console::renderError(string value) {
+    value = regex_replace(value, std::regex("&"), "&amp;");
+    for (auto escape : htmlEscapeMap) {
+        value = regex_replace(value, std::regex(escape.first), escape.second);
+    }
+    return string("<b class='error'>") + value + string("</b>");
 }

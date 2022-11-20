@@ -32,6 +32,7 @@ class HttpSession : public enable_shared_from_this<HttpSession> {
    private:
     void doRead();
     void doWrite();
+    void doWrite(string value);
 
     void recvRequest(string rawRequest);
 };
