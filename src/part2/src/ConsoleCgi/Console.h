@@ -39,7 +39,5 @@ class Console : public enable_shared_from_this<Console> {
 
     void writeSocket(string message);
     void renderHtml();
-    string renderCommand(string value);
-    string renderResponse(string value);
-    string renderError(string value);
+    void renderOutput(int sessionId, Output& output);
 };
