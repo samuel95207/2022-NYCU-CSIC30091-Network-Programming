@@ -32,21 +32,23 @@ const string ConsoleSession::scriptPath = "./test_case/";
 
 
 
-ConsoleSession::ConsoleSession(boost::asio::io_service& io_service, Console* console)
-    : socket(io_service), resolver(io_service), console(console) {}
+ConsoleSession::ConsoleSession(boost::asio::io_service& io_service, Console* console, int id, string host, int port,
+                               string filename, HttpRequest request)
+    : socket(io_service),
+      resolver(io_service),
+      console(console),
+      id(id),
+      host(host),
+      port(port),
+      filename(filename),
+      request(request) {}
 
-void ConsoleSession::start(int idIn, string hostIn, int portIn, string filenameIn, HttpRequest requestIn) {
-    id = idIn;
-    host = hostIn;
-    port = portIn;
-    filename = filenameIn;
-    request = requestIn;
+void ConsoleSession::start() {
     exit = false;
-
 
     scriptFile.open((scriptPath + filename).c_str(), ios::in);
     if (!scriptFile.is_open()) {
-        addOutput(string("File Open Error! Cannot open file ") + scriptPath + filename + ".\n", OutputType::ERROR);
+        addOutput(string("File Open Error! Cannot open file ") + scriptPath + filename + ".\n", OutputType::ERRORMSG);
         exitSession();
         return;
     }
@@ -68,7 +70,7 @@ vector<Output> ConsoleSession::getOutputArr() { return commandResponseArr; }
 
 void ConsoleSession::onResolve(const boost::system::error_code& errorCode, tcp::resolver::iterator iterator) {
     if (errorCode) {
-        addOutput(string("Resolve Error: ") + errorCode.message() + "\n", OutputType::ERROR);
+        addOutput(string("Resolve Error: ") + errorCode.message() + "\n", OutputType::ERRORMSG);
         exitSession();
         return;
     }
@@ -80,7 +82,7 @@ void ConsoleSession::onResolve(const boost::system::error_code& errorCode, tcp::
 
 void ConsoleSession::onConnect(const boost::system::error_code& errorCode, tcp::resolver::iterator iterator) {
     if (errorCode) {
-        addOutput(string("Connect Error: ") + errorCode.message() + "\n", OutputType::ERROR);
+        addOutput(string("Connect Error: ") + errorCode.message() + "\n", OutputType::ERRORMSG);
         exitSession();
         return;
     }
@@ -105,7 +107,7 @@ void ConsoleSession::doRead() {
     socket.async_read_some(boost::asio::buffer(data, BUF_SIZE),
                            [this, self](boost::system::error_code errorCode, size_t length) {
                                if (errorCode) {
-                                   addOutput(string("Read Error: ") + errorCode.message() + "\n", OutputType::ERROR);
+                                   addOutput(string("Read Error: ") + errorCode.message() + "\n", OutputType::ERRORMSG);
                                    exitSession();
                                    return;
                                }
@@ -141,7 +143,8 @@ void ConsoleSession::doWrite() {
     boost::asio::async_write(socket, boost::asio::buffer(data, strlen(data)),
                              [this, self, command](boost::system::error_code errorCode, std::size_t length) {
                                  if (errorCode) {
-                                     addOutput(string("Write Error: ") + errorCode.message() + "\n", OutputType::ERROR);
+                                     addOutput(string("Write Error: ") + errorCode.message() + "\n",
+                                               OutputType::ERRORMSG);
                                      exitSession();
                                      return;
                                  }
@@ -162,21 +165,12 @@ void ConsoleSession::doWrite() {
 }
 
 
-void ConsoleSession::recvRequest(string rawRequest) {
-    cout << rawRequest << endl;
-    request = HttpRequest::parse(rawRequest);
-
-    request.print();
-    cout << "REMOTE_ADDR = " << socket.remote_endpoint().address().to_string().c_str() << endl;
-    cout << "REMOTE_PORT = " << to_string(socket.remote_endpoint().port()).c_str() << endl;
-}
-
 void ConsoleSession::addOutput(string output, OutputType type) {
     Output newOutput;
     newOutput.value = output;
     newOutput.type = type;
     commandResponseArr.push_back(newOutput);
-    console->renderHtml();
+    console->renderOutput(id, newOutput);
 }
 
 void ConsoleSession::exitSession() {

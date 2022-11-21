@@ -17,7 +17,7 @@ using boost::asio::ip::tcp;
 
 class Console;
 
-enum class OutputType { COMMAND, RESPONSE, ERROR };
+enum class OutputType { COMMAND, RESPONSE, ERRORMSG };
 
 struct Output {
     string value;
@@ -52,9 +52,10 @@ class ConsoleSession : public enable_shared_from_this<ConsoleSession> {
 
 
    public:
-    ConsoleSession(boost::asio::io_service& io_service, Console* console);
+    ConsoleSession(boost::asio::io_service& io_service, Console* console, int id, string host, int port,
+                   string filename, HttpRequest request);
 
-    void start(int idIn, string hostIn, int portIn, string filenameIn, HttpRequest requestIn);
+    void start();
     bool isExit();
 
 
@@ -71,7 +72,6 @@ class ConsoleSession : public enable_shared_from_this<ConsoleSession> {
     void doRead();
     void doWrite();
 
-    void recvRequest(string rawRequest);
     void addOutput(string output, OutputType type);
     void exitSession();
 };

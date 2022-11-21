@@ -25,11 +25,9 @@ map<string, string> Console::htmlEscapeMap = {
 void Console::start() {
     try {
         getCgiEnv();
-        // cout << "output<br/>";
         // request.print();
 
         for (auto queryPair : request.queryMap) {
-            // cout << queryPair.first << " " << queryPair.second << "<br/>";
             if (queryPair.first[0] != 'h' || queryPair.second == "") {
                 continue;
             }
@@ -38,26 +36,20 @@ void Console::start() {
             int shellPort = stoi(request.queryMap[string("p") + to_string(id)]);
             string shellFilename = request.queryMap[string("f") + to_string(id)];
 
-            shared_ptr<ConsoleSession> ptr = std::make_shared<ConsoleSession>(io_context, this);
+            shared_ptr<ConsoleSession> ptr =
+                std::make_shared<ConsoleSession>(io_context, this, id, shellHost, shellPort, shellFilename, request);
             sessions[id] = ptr;
-
-            ptr->start(id, shellHost, shellPort, shellFilename, request);
-        }
-
-        io_context.run();
-
-
-        while (true) {
-            bool exit = true;
-            for (auto sessionPair : sessions) {
-                exit = exit && sessionPair.second->isExit();
-            }
-            if (exit) {
-                break;
-            }
         }
 
         renderHtml();
+
+        for (auto session : sessions) {
+            session.second->start();
+        }
+
+
+        io_context.run();
+
 
     } catch (std::exception& e) {
         cerr << "Exception: " << e.what() << "<br/>";
@@ -99,7 +91,6 @@ void Console::renderHtml() {
             "Content-type:text/html\r\n\r\n"
             "<!DOCTYPE html>"
             "<html lang=\"en\">"
-            "  <script>document.getElementById('body').innerHTML = ''</script>"
             "  <head>"
             "    <meta charset=\"UTF-8\" />"
             "    <title>NP Project 3 Sample Console</title>"
@@ -150,16 +141,7 @@ void Console::renderHtml() {
             "      <tbody>"
             "        <tr>";
     for (auto sessionPair : sessions) {
-        cout << "<td><pre id=\"s" << sessionPair.first << "\" class=\"mb-0\">";
-        for (auto output : sessionPair.second->getOutputArr()) {
-            if (output.type == OutputType::COMMAND) {
-                cout << renderCommand(output.value);
-            } else if (output.type == OutputType::RESPONSE) {
-                cout << renderResponse(output.value);
-            } else if (output.type == OutputType::ERROR) {
-                cout << renderError(output.value);
-            }
-        }
+        cout << "<td><pre id='s" << sessionPair.first << "' class='mb-0'>";
         cout << "</pre></td>";
     }
     cout << "        </tr>"
@@ -167,30 +149,23 @@ void Console::renderHtml() {
             "    </table>"
             "  </body>"
             "</html>";
+
     cout.flush();
 }
 
 
-string Console::renderCommand(string value) {
-    value = regex_replace(value, std::regex("&"), "&amp;");
+void Console::renderOutput(int sessionId, Output& output) {
+    string value = regex_replace(output.value, std::regex("&"), "&amp;");
     for (auto escape : htmlEscapeMap) {
         value = regex_replace(value, std::regex(escape.first), escape.second);
     }
-    return string("<b>") + value + string("</b>");
-}
 
-string Console::renderResponse(string value) {
-    value = regex_replace(value, std::regex("&"), "&amp;");
-    for (auto escape : htmlEscapeMap) {
-        value = regex_replace(value, std::regex(escape.first), escape.second);
+    if (output.type == OutputType::COMMAND) {
+        value = string("<b>") + value + string("</b>");
+    } else if (output.type == OutputType::ERRORMSG) {
+        value = string("<b class=\"error\">") + value + string("</b>");
     }
-    return value;
-}
 
-string Console::renderError(string value) {
-    value = regex_replace(value, std::regex("&"), "&amp;");
-    for (auto escape : htmlEscapeMap) {
-        value = regex_replace(value, std::regex(escape.first), escape.second);
-    }
-    return string("<b class='error'>") + value + string("</b>");
+    cout << "<script>document.getElementById('s" << sessionId << "').innerHTML += '" << value << "';</script>";
+    cout.flush();
 }

@@ -28,10 +28,9 @@ class Console {
 
    public:
     void start();
-    string renderCommand(string value);
-    string renderResponse(string value);
-    string renderError(string value);
+
     void renderHtml();
+    void renderOutput(int sessionId, Output& output);
 
    private:
     void getCgiEnv();
