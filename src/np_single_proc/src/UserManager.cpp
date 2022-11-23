@@ -16,6 +16,7 @@ User* UserManager::addUser(int fd, sockaddr_in ipAddr) {
     newUser->fd = fd;
     newUser->ipAddr = ipAddr;
     newUser->id = idMin();
+    newUser->nameChangeCount = 0;
 
     string ipString = string(inet_ntoa(ipAddr.sin_addr)) + ":" + to_string((int)ntohs(ipAddr.sin_port));
     // cout << ipString << endl;

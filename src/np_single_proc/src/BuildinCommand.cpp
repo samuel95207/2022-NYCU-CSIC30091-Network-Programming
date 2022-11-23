@@ -101,6 +101,10 @@ bool BuildinCommand::nameCommand(NPShell& shell, SingleProcServer& server, int f
         cerr << "Error args1 cannot be empty" << endl;
         return false;
     }
+    // if (me->nameChangeCount >= 3) {
+    //     server.sendDirectMessage(me->id, "***Error! You have exceed name changing limit.***\n");
+    //     return false;
+    // }
     if (!server.userManager.setNameById(me->id, name)) {
         cerr << "*** User '" << name << "' already exists. ***" << endl;
         return false;
@@ -110,6 +114,7 @@ bool BuildinCommand::nameCommand(NPShell& shell, SingleProcServer& server, int f
     string ipString = string(inet_ntoa(me->ipAddr.sin_addr)) + ":" + to_string((int)ntohs(me->ipAddr.sin_port));
     string message = "*** User from " + ipString + " is named '" + me->name + "'. ***\n";
     server.broadcast(message);
+    me->nameChangeCount++;
 
     return true;
 }

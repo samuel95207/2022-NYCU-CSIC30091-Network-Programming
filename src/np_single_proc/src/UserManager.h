@@ -16,6 +16,7 @@ struct User {
     int fd;
     int id;
     std::string name;
+    int nameChangeCount = 0;
     sockaddr_in ipAddr;
 };
 
