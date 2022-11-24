@@ -54,6 +54,16 @@ run1: part1
 run2: part2
 	@$(MAKE) run -C src/part2
 
+test:
+	@rm -rf testing/src/311511034
+	@mkdir -p testing/src
+	@mkdir -p testing/src/311511034
+	@cp -r src/part1-cgi testing/src/311511034/
+	@cp -r src/part1-http testing/src/311511034/
+	@cp -r src/part2 testing/src/311511034/
+	@cp Makefile testing/src/311511034/
+	@cd testing; ./demo.sh
+
 
 zip:
 	@make clean
