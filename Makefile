@@ -58,9 +58,9 @@ test:
 	@rm -rf testing/src/311511034
 	@mkdir -p testing/src
 	@mkdir -p testing/src/311511034
-	@cp -r src/part1-cgi testing/src/311511034/
-	@cp -r src/part1-http testing/src/311511034/
-	@cp -r src/part2 testing/src/311511034/
+	@cp -r src/part1-cgi testing/src/311511034/src
+	@cp -r src/part1-http testing/src/311511034/src
+	@cp -r src/part2 testing/src/311511034/src
 	@cp Makefile testing/src/311511034/
 	@cd testing; ./demo.sh
 
