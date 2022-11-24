@@ -20,10 +20,6 @@
 #endif
 
 
-#ifndef _HTTP_REQUEST_H_
-#define _HTTP_REQUEST_H_
-#include "HttpRequest.h"
-#endif
 
 using namespace std;
 using boost::asio::ip::tcp;
@@ -32,17 +28,19 @@ const string ConsoleSession::scriptPath = "./test_case/";
 
 
 
-ConsoleSession::ConsoleSession(boost::asio::io_service& io_service, Console* console)
-    : socket(io_service), resolver(io_service), console(console) {}
+ConsoleSession::ConsoleSession(boost::asio::io_service& io_service, Console* console, int id, string host, int port,
+                               string filename, HttpRequest request)
+    : socket(io_service),
+      resolver(io_service),
+      console(console),
+      id(id),
+      host(host),
+      port(port),
+      filename(filename),
+      request(request) {}
 
-void ConsoleSession::start(int idIn, string hostIn, int portIn, string filenameIn, HttpRequest requestIn) {
-    id = idIn;
-    host = hostIn;
-    port = portIn;
-    filename = filenameIn;
-    request = requestIn;
+void ConsoleSession::start() {
     exit = false;
-
 
     scriptFile.open((scriptPath + filename).c_str(), ios::in);
     if (!scriptFile.is_open()) {
@@ -141,7 +139,8 @@ void ConsoleSession::doWrite() {
     boost::asio::async_write(socket, boost::asio::buffer(data, strlen(data)),
                              [this, self, command](boost::system::error_code errorCode, std::size_t length) {
                                  if (errorCode) {
-                                     addOutput(string("Write Error: ") + errorCode.message() + "\n", OutputType::ERRORMSG);
+                                     addOutput(string("Write Error: ") + errorCode.message() + "\n",
+                                               OutputType::ERRORMSG);
                                      exitSession();
                                      return;
                                  }
@@ -162,21 +161,12 @@ void ConsoleSession::doWrite() {
 }
 
 
-void ConsoleSession::recvRequest(string rawRequest) {
-    cout << rawRequest << endl;
-    request = HttpRequest::parse(rawRequest);
-
-    request.print();
-    cout << "REMOTE_ADDR = " << socket.remote_endpoint().address().to_string().c_str() << endl;
-    cout << "REMOTE_PORT = " << to_string(socket.remote_endpoint().port()).c_str() << endl;
-}
-
 void ConsoleSession::addOutput(string output, OutputType type) {
     Output newOutput;
     newOutput.value = output;
     newOutput.type = type;
     commandResponseArr.push_back(newOutput);
-    console->renderHtml();
+    console->renderOutput(id, newOutput);
 }
 
 void ConsoleSession::exitSession() {
