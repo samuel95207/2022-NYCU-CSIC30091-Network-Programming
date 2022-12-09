@@ -1,4 +1,4 @@
-TARGET = ./console.cgi
+TARGET = ./hw4.cgi
 
 SRC_DIR = ./src
 SRC_SUBDIR += . 
