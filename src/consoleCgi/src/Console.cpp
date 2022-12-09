@@ -27,6 +27,9 @@ void Console::start() {
         getCgiEnv();
         // request.print();
 
+        string socksHost = request.queryMap[string("sh")];
+        int socksPort = stoi(request.queryMap[string("sp")]);
+
         for (auto queryPair : request.queryMap) {
             if (queryPair.first[0] != 'h' || queryPair.second == "") {
                 continue;
@@ -36,8 +39,9 @@ void Console::start() {
             int shellPort = stoi(request.queryMap[string("p") + to_string(id)]);
             string shellFilename = request.queryMap[string("f") + to_string(id)];
 
-            shared_ptr<ConsoleSession> ptr =
-                std::make_shared<ConsoleSession>(io_context, this, id, shellHost, shellPort, shellFilename, request);
+
+            shared_ptr<ConsoleSession> ptr = std::make_shared<ConsoleSession>(
+                io_context, this, id, shellHost, shellPort, socksHost, socksPort, shellFilename, request);
             sessions[id] = ptr;
         }
 

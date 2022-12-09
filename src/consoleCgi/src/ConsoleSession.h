@@ -36,6 +36,8 @@ class ConsoleSession : public enable_shared_from_this<ConsoleSession> {
     int id;
     string host;
     int port;
+    string socksHost;
+    int socksPort;
     string filename;
     HttpRequest request;
 
@@ -45,6 +47,8 @@ class ConsoleSession : public enable_shared_from_this<ConsoleSession> {
     Output currentOutput;
 
     char data[BUF_SIZE];
+    char socks4Buf[BUF_SIZE];
+
 
 
     bool exit = false;
@@ -53,7 +57,7 @@ class ConsoleSession : public enable_shared_from_this<ConsoleSession> {
 
    public:
     ConsoleSession(boost::asio::io_service& io_service, Console* console, int id, string host, int port,
-                   string filename, HttpRequest request);
+                   string socksHost, int socksPort, string filename, HttpRequest request);
 
     void start();
     bool isExit();
@@ -69,6 +73,8 @@ class ConsoleSession : public enable_shared_from_this<ConsoleSession> {
    private:
     void onResolve(const boost::system::error_code& errorCode, tcp::resolver::iterator iterator);
     void onConnect(const boost::system::error_code& errorCode, tcp::resolver::iterator iterator);
+    void writeSocks4();
+    void readSocks4();
     void doRead();
     void doWrite();
 

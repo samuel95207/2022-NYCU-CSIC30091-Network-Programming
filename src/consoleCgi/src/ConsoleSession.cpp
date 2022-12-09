@@ -25,6 +25,13 @@
 #include "HttpRequest.h"
 #endif
 
+#ifndef _SOCKS_REQUEST_H_
+#define _SOCKS_REQUEST_H_
+#include "Socks4aRequest.h"
+#endif
+
+
+
 using namespace std;
 using boost::asio::ip::tcp;
 
@@ -33,13 +40,15 @@ const string ConsoleSession::scriptPath = "./test_case/";
 
 
 ConsoleSession::ConsoleSession(boost::asio::io_service& io_service, Console* console, int id, string host, int port,
-                               string filename, HttpRequest request)
+                               string socksHost, int socksPort, string filename, HttpRequest request)
     : socket(io_service),
       resolver(io_service),
       console(console),
       id(id),
       host(host),
       port(port),
+      socksHost(socksHost),
+      socksPort(socksPort),
       filename(filename),
       request(request) {}
 
@@ -53,7 +62,7 @@ void ConsoleSession::start() {
         return;
     }
 
-    tcp::resolver::query query(host, to_string(port));
+    tcp::resolver::query query(socksHost, to_string(socksPort));
 
     resolver.async_resolve(query, boost::bind(&ConsoleSession::onResolve, shared_from_this(),
                                               boost::asio::placeholders::error, boost::asio::placeholders::iterator));
@@ -95,7 +104,68 @@ void ConsoleSession::onConnect(const boost::system::error_code& errorCode, tcp::
                                                    boost::asio::placeholders::error, ++iterator));
     }
 
-    doRead();
+    writeSocks4();
+}
+
+void ConsoleSession::writeSocks4() {
+    auto self(shared_from_this());
+
+
+    Socks4aRequest request;
+    request.VN = (byte)4;
+    request.CD = (byte)1;
+    request.dstPort = htons((uint16_t)port);
+    request.dstIp = htonl(boost::asio::ip::address::from_string("0.0.0.1").to_v4().to_uint());
+    request.domainName = host;
+
+    // addOutput(host + "\n", OutputType::ERRORMSG);
+    // addOutput("writeSocks4\n", OutputType::ERRORMSG);
+
+    char* requestPkt = request.byteArr();
+
+    // string str;
+    // for (int i = 0; i < request.size(); i++) {
+    //     if (requestPkt[i] < '.') {
+    //         str += to_string((int)requestPkt[i]) + " ";
+    //     } else {
+    //         str += requestPkt[i];
+    //     }
+    // }
+    // addOutput(str + "\n", OutputType::ERRORMSG);
+
+
+    boost::asio::async_write(socket, boost::asio::buffer(requestPkt, request.size()), boost::asio::transfer_all(),
+                             [this, self](boost::system::error_code errorCode, std::size_t length) {
+                                 if (errorCode) {
+                                     addOutput(string("SOCKS4 Error: ") + errorCode.message() + "\n",
+                                               OutputType::ERRORMSG);
+                                     exitSession();
+                                     return;
+                                 }
+
+                                 readSocks4();
+                                 doRead();
+                             });
+}
+
+
+void ConsoleSession::readSocks4() {
+    auto self(shared_from_this());
+    memset(socks4Buf, 0, BUF_SIZE);
+
+    socket.async_read_some(boost::asio::buffer(socks4Buf, BUF_SIZE), [this, self](boost::system::error_code errorCode,
+                                                                                  std::size_t length) {
+        if (errorCode) {
+            addOutput(string("SOCKS4 Error: ") + errorCode.message() + "\n", OutputType::ERRORMSG);
+            exitSession();
+            return;
+        }
+
+
+        if (!(socks4Buf[0] == 0 && socks4Buf[1] == 90)) {
+            socket.close();
+        }
+    });
 }
 
 
