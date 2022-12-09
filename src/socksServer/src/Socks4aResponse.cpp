@@ -31,7 +31,7 @@ Socks4aResponse::Socks4aResponse() {}
 
 void Socks4aResponse::print() {
     cout << "VN: " << (int)VN << endl;
-    cout << "CD: " << getCommandString() << endl;
+    cout << "CD: " << getAcceptString() << endl;
     cout << "dstPort: " << dstPort << endl;
     cout << "dstIp: " << getDstIpString() << endl;
 }
@@ -44,16 +44,9 @@ string Socks4aResponse::getDstIpString() {
     return string(inet_ntoa(netAddr));
 }
 
-string Socks4aResponse::getCommandString() {
-    if (CD == (byte)1) {
-        return "CONNECT";
-    } else if (CD == (byte)2) {
-        return "BIND";
-    }
-    return "";
-}
-
 string Socks4aResponse::getAcceptString() { return isAccept() ? "Accept" : "Reject"; }
+
+void Socks4aResponse::setAccept(bool success) { CD = success ? (byte)90 : (byte)91; }
 
 void Socks4aResponse::setDstPort(uint16_t port) { dstPort = port; }
 
