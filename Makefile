@@ -5,7 +5,7 @@ all:
 	@$(MAKE) -C src/socksServer
 	@$(MAKE) -C src/consoleCgi
 	@cp ./src/socksServer/socks_server ./socks_server
-	@cp ./src/consoleCgi/console.cgi ./console.cgi
+	@cp ./src/consoleCgi/hw4.cgi ./hw4.cgi
 
 
 
@@ -19,6 +19,8 @@ run:
 	@$(MAKE) run -C src/consoleCgi
 	@$(MAKE) run -C src/socksServer
 
+run_http:
+	@cd working_dir; ./http_server 7002
 
 zip:
 	@make clean
