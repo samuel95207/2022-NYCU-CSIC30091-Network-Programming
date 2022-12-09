@@ -24,7 +24,9 @@ using boost::asio::ip::tcp;
 
 
 SocksSession::SocksSession(tcp::socket socket, boost::asio::io_service& io_service)
-    : clientSocket(std::move(socket)), serverSocket(io_service), acceptor(io_service), resolver(io_service) {}
+    : clientSocket(std::move(socket)), serverSocket(io_service), acceptor(io_service), resolver(io_service) {
+    firewall = Firewall("./socks.conf");
+}
 
 void SocksSession::start() { readSocks(); }
 
@@ -43,8 +45,8 @@ void SocksSession::readSocks() {
                                      //    request.print();
                                      //    cout << endl;
 
-                                     // TODO: Firewall
-                                     response = Socks4aResponse(true);
+                                     bool isPermit = firewall.isPermit(request);
+                                     response = Socks4aResponse(isPermit);
 
 
                                      printSocksInfo();

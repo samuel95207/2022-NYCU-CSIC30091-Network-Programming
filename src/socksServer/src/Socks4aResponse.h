@@ -16,11 +16,11 @@ class Socks4aResponse {
     Socks4aResponse(bool success, uint16_t dstPort, uint32_t dstIp);
     Socks4aResponse(bool success);
     Socks4aResponse();
-    void print();
-
-    bool isAccept();
-    string getDstIpString();
-    string getAcceptString();
+    
+    void print() const;
+    bool isAccept() const;
+    string getDstIpString() const;
+    string getAcceptString() const;
 
     void setAccept(bool success);
     void setDstPort(uint16_t port);

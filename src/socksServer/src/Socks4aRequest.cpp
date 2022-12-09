@@ -38,7 +38,7 @@ Socks4aRequest Socks4aRequest::parse(char* rawRequest) {
     return request;
 }
 
-void Socks4aRequest::print() {
+void Socks4aRequest::print() const {
     cout << "VN: " << (int)VN << endl;
     cout << "CD: " << getCommandString() << endl;
     cout << "dstPort: " << dstPort << endl;
@@ -47,16 +47,16 @@ void Socks4aRequest::print() {
     cout << "domainName: " << domainName << endl;
 }
 
-bool Socks4aRequest::needDomainResolve() { return (dstIp > (uint32_t)0 && dstIp < (uint32_t)256); }
+bool Socks4aRequest::needDomainResolve() const { return (dstIp > (uint32_t)0 && dstIp < (uint32_t)256); }
 
 
-string Socks4aRequest::getDstIpString() {
+string Socks4aRequest::getDstIpString() const {
     in_addr netAddr;
     netAddr.s_addr = htonl(dstIp);
     return string(inet_ntoa(netAddr));
 }
 
-string Socks4aRequest::getCommandString() {
+string Socks4aRequest::getCommandString() const {
     if (CD == (byte)1) {
         return "CONNECT";
     } else if (CD == (byte)2) {

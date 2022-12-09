@@ -1,3 +1,4 @@
+#include <boost/asio.hpp>
 #include <map>
 #include <string>
 #include <vector>
@@ -16,11 +17,11 @@ class Socks4aRequest {
 
    public:
     static Socks4aRequest parse(char* rawRequest);
-    void print();
+    void print() const;
 
-    bool needDomainResolve();
-    string getDstIpString();
-    string getCommandString();
+    bool needDomainResolve() const;
+    string getDstIpString() const;
+    string getCommandString() const;
 
     void resolveDomainName(boost::asio::ip::tcp::resolver& resolver);
 };

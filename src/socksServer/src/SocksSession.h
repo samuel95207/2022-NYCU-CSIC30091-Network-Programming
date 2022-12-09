@@ -15,6 +15,11 @@
 #include "Socks4aResponse.h"
 #endif
 
+#ifndef _FIREWALL_H_
+#define _FIREWALL_H_
+#include "Firewall.h"
+#endif
+
 
 
 using namespace std;
@@ -41,6 +46,8 @@ class SocksSession : public enable_shared_from_this<SocksSession> {
     Socks4aRequest request;
     Socks4aResponse response;
 
+    Firewall firewall;
+
 
    public:
     SocksSession(tcp::socket socket, boost::asio::io_service& io_service);
@@ -57,8 +64,6 @@ class SocksSession : public enable_shared_from_this<SocksSession> {
     void readFromServer();
     void writeToClient(std::size_t length);
     void writeToServer(std::size_t length);
-
-
 
 
 

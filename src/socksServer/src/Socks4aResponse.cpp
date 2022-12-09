@@ -29,22 +29,22 @@ Socks4aResponse::Socks4aResponse(bool success) {
 Socks4aResponse::Socks4aResponse() {}
 
 
-void Socks4aResponse::print() {
+void Socks4aResponse::print() const {
     cout << "VN: " << (int)VN << endl;
     cout << "CD: " << getAcceptString() << endl;
     cout << "dstPort: " << dstPort << endl;
     cout << "dstIp: " << getDstIpString() << endl;
 }
 
-bool Socks4aResponse::isAccept() { return (CD == (byte)90); }
+bool Socks4aResponse::isAccept() const { return (CD == (byte)90); }
 
-string Socks4aResponse::getDstIpString() {
+string Socks4aResponse::getDstIpString() const {
     in_addr netAddr;
     netAddr.s_addr = dstIp;
     return string(inet_ntoa(netAddr));
 }
 
-string Socks4aResponse::getAcceptString() { return isAccept() ? "Accept" : "Reject"; }
+string Socks4aResponse::getAcceptString() const { return isAccept() ? "Accept" : "Reject"; }
 
 void Socks4aResponse::setAccept(bool success) { CD = success ? (byte)90 : (byte)91; }
 
