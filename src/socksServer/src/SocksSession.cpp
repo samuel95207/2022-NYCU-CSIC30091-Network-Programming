@@ -70,8 +70,9 @@ void SocksSession::replySocks() {
     auto self(shared_from_this());
 
     response.setHton();
-    response.print();
-    cout << endl;
+    // response.print();
+    // cout << endl;
+
     boost::asio::async_write(clientSocket, boost::asio::buffer(&response, sizeof(response)),
                              [this, self](boost::system::error_code errorCode, std::size_t length) {
                                  if (errorCode) {
@@ -95,7 +96,7 @@ void SocksSession::createConnectTunnel() {
         if (errorCode) {
             response.setAccept(false);
             replySocks();
-            
+
             clientSocket.close();
 
             // cerr << "createConnectTunnel(): " << errorCode.message() << endl;
@@ -116,17 +117,18 @@ void SocksSession::createBindTunnel() {
     acceptor.open(endpoint.protocol());
     acceptor.bind(endpoint);
     acceptor.listen();
-    response.setDstPort(acceptor.local_endpoint().port());
 
+    response.setDstPort(acceptor.local_endpoint().port());
     replySocks();
 
     acceptor.async_accept(serverSocket, [this, self](const boost::system::error_code& errorCode) {
         if (errorCode) {
             clientSocket.close();
-            cerr << "createBindTunnel(): " << errorCode.message() << endl;
+            // cerr << "createBindTunnel(): " << errorCode.message() << endl;
             return;
         }
 
+        replySocks();
         readFromClient();
         readFromServer();
     });
