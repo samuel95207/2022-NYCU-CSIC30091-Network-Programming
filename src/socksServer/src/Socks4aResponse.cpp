@@ -54,3 +54,16 @@ string Socks4aResponse::getCommandString() {
 }
 
 string Socks4aResponse::getAcceptString() { return isAccept() ? "Accept" : "Reject"; }
+
+void Socks4aResponse::setDstPort(uint16_t port) { dstPort = port; }
+
+void Socks4aResponse::setDstIp(uint32_t ip) { dstIp = ip; }
+
+void Socks4aResponse::setDstIpByString(string ip) {
+    setDstIp(boost::asio::ip::address::from_string(ip).to_v4().to_uint());
+}
+
+void Socks4aResponse::setHton() {
+    dstPort = htons(dstPort);
+    dstIp = htonl(dstIp);
+}

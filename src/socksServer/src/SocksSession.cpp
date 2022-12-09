@@ -34,7 +34,7 @@ void SocksSession::readSocks() {
     clientSocket.async_read_some(boost::asio::buffer(socksRequestBuf, BUF_SIZE),
                                  [this, self](boost::system::error_code errorCode, size_t length) {
                                      if (errorCode) {
-                                        //  cerr << "readSocks(): " << errorCode.message() << endl;
+                                         //  cerr << "readSocks(): " << errorCode.message() << endl;
                                          return;
                                      }
                                      request = Socks4aRequest::parse(socksRequestBuf);
@@ -45,6 +45,8 @@ void SocksSession::readSocks() {
 
                                      // TODO: Firewall
                                      response = Socks4aResponse(true);
+
+
                                      printSocksInfo();
                                      cout << endl;
 
@@ -57,6 +59,7 @@ void SocksSession::readSocks() {
                                      if (request.getCommandString() == "CONNECT") {
                                          createConnectTunnel();
                                      } else if (request.getCommandString() == "BIND") {
+                                         createBindTunnel();
                                      } else {
                                          clientSocket.close();
                                      }
@@ -66,10 +69,11 @@ void SocksSession::readSocks() {
 void SocksSession::replySocks() {
     auto self(shared_from_this());
 
+    response.setHton();
     boost::asio::async_write(clientSocket, boost::asio::buffer(&response, sizeof(response)),
                              [this, self](boost::system::error_code errorCode, std::size_t length) {
                                  if (errorCode) {
-                                    //  cerr << "replySocks(): " << errorCode.message() << endl;
+                                     //  cerr << "replySocks(): " << errorCode.message() << endl;
                                      return;
                                  }
 
@@ -99,6 +103,28 @@ void SocksSession::createConnectTunnel() {
 }
 
 
+void SocksSession::createBindTunnel() {
+    auto self(shared_from_this());
+
+    boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::address_v4::any(), 0);
+    acceptor.open(endpoint.protocol());
+    acceptor.bind(endpoint);
+    acceptor.listen();
+    response.setDstPort(acceptor.local_endpoint().port());
+
+    acceptor.async_accept(serverSocket, [this, self](const boost::system::error_code& errorCode) {
+        if (errorCode) {
+            clientSocket.close();
+            // cerr << "createBindTunnel(): " << errorCode.message() << endl;
+            return;
+        }
+
+        readFromClient();
+        readFromServer();
+        replySocks();
+    });
+}
+
 void SocksSession::readFromClient() {
     auto self(shared_from_this());
 
@@ -108,7 +134,7 @@ void SocksSession::readFromClient() {
                                      if (errorCode) {
                                          clientSocket.close();
                                          serverSocket.close();
-                                        //  cerr << "readFromClient(): " << errorCode.message() << endl;
+                                         //  cerr << "readFromClient(): " << errorCode.message() << endl;
                                          return;
                                      }
 
@@ -127,7 +153,7 @@ void SocksSession::readFromServer() {
                                      if (errorCode) {
                                          clientSocket.close();
                                          serverSocket.close();
-                                        //  cerr << "readFromServer(): " << errorCode.message() << endl;
+                                         //  cerr << "readFromServer(): " << errorCode.message() << endl;
                                          return;
                                      }
 
@@ -145,7 +171,7 @@ void SocksSession::writeToServer(std::size_t length) {
                                  if (errorCode) {
                                      clientSocket.close();
                                      serverSocket.close();
-                                    //  cerr << "writeToServer(): " << errorCode.message() << endl;
+                                     //  cerr << "writeToServer(): " << errorCode.message() << endl;
                                      return;
                                  }
 
@@ -161,7 +187,7 @@ void SocksSession::writeToClient(std::size_t length) {
                                  if (errorCode) {
                                      clientSocket.close();
                                      serverSocket.close();
-                                    //  cerr << "writeToClient(): " << errorCode.message() << endl;
+                                     //  cerr << "writeToClient(): " << errorCode.message() << endl;
                                      return;
                                  }
                                  memset(writeToClientBuf, 0, BUF_SIZE);

@@ -22,4 +22,11 @@ class Socks4aResponse {
     string getDstIpString();
     string getCommandString();
     string getAcceptString();
+
+    void setDstPort(uint16_t port);
+    void setDstIp(uint32_t ip);
+    void setDstIpByString(string ip);
+
+    void setHton();
+
 };

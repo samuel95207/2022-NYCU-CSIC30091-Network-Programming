@@ -51,6 +51,7 @@ class SocksSession : public enable_shared_from_this<SocksSession> {
     void replySocks();
 
     void createConnectTunnel();
+    void createBindTunnel();
 
     void readFromClient();
     void readFromServer();
