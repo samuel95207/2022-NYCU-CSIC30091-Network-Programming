@@ -144,7 +144,6 @@ void ConsoleSession::writeSocks4() {
                                  }
 
                                  readSocks4();
-                                 doRead();
                              });
 }
 
@@ -153,7 +152,7 @@ void ConsoleSession::readSocks4() {
     auto self(shared_from_this());
     memset(socks4Buf, 0, BUF_SIZE);
 
-    socket.async_read_some(boost::asio::buffer(socks4Buf, BUF_SIZE), [this, self](boost::system::error_code errorCode,
+    socket.async_read_some(boost::asio::buffer(socks4Buf, SOCKS4_REPLY_SIZE), [this, self](boost::system::error_code errorCode,
                                                                                   std::size_t length) {
         if (errorCode) {
             addOutput(string("SOCKS4 Error: ") + errorCode.message() + "\n", OutputType::ERRORMSG);
@@ -164,7 +163,11 @@ void ConsoleSession::readSocks4() {
 
         if (!(socks4Buf[0] == 0 && socks4Buf[1] == 90)) {
             socket.close();
+            return;
         }
+
+        doRead();
+
     });
 }
 
