@@ -1,0 +1,4 @@
+1:removetag test.html | number | delaycat 3 |2
+1:removetag test.html |1
+1:cat
+1:exit

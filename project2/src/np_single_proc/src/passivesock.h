@@ -1,0 +1,1 @@
+int passivesock(const char* service, const char* transport, int qlen);

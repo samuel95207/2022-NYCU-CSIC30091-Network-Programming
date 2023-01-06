@@ -1,0 +1,27 @@
+1| ****************************************
+1| ** Welcome to the information server. **
+1| ****************************************
+1| *** User '(no name)' entered from [address1]. ***
+1| % noop
+2| ****************************************
+2| ** Welcome to the information server. **
+2| ****************************************
+2| *** User '(no name)' entered from [address2]. ***
+2| % noop
+1| % name AAA
+2| % name BBB
+1| *** User '(no name)' entered from [address2]. ***
+1| *** User from [address1] is named 'AAA'. ***
+1| % tell 2 catch my big data
+1| *** User from [address2] is named 'BBB'. ***
+1| % manyblessings >2
+2| *** User from [address1] is named 'AAA'. ***
+2| *** User from [address2] is named 'BBB'. ***
+2| % blackhole <1
+1| *** AAA (#1) just piped 'manyblessings >2' to BBB (#2) ***
+1| % exit
+2| *** AAA told you ***: catch my big data
+2| *** AAA (#1) just piped 'manyblessings >2' to BBB (#2) ***
+2| *** BBB (#2) just received from AAA (#1) by 'blackhole <1' ***
+2| 110000
+2| % exit

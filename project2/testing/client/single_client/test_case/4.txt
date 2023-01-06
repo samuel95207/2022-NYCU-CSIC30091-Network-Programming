@@ -1,0 +1,19 @@
+1:printenv TEST
+1:setenv TEST pass
+1:printenv TEST
+1:
+1:
+1:noop
+1:setenv PATH nbpin
+1:printenv PATH
+1:noop
+1:
+1:
+1:cat test.html test.html |1
+1:
+1:cat > temp.html
+1:number test.html |2
+1:ls
+1:cat > temp.html
+1:cat temp.html
+1:exit
