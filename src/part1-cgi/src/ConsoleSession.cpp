@@ -36,6 +36,7 @@ ConsoleSession::ConsoleSession(boost::asio::io_service& io_service, Console* con
                                string filename, HttpRequest request)
     : socket(io_service),
       resolver(io_service),
+      timer(io_service),
       console(console),
       id(id),
       host(host),
@@ -132,36 +133,46 @@ void ConsoleSession::doWrite() {
     strcpy(data, "");
     memset(data, 0, BUF_SIZE);
 
-    string command;
-    getline(scriptFile, command);
-    if (command[command.length() - 1] == '\r') {
-        command.erase(command.length() - 1);
-    }
-    command += "\n";
-    strcpy(data, command.c_str());
 
-    boost::asio::async_write(socket, boost::asio::buffer(data, strlen(data)),
-                             [this, self, command](boost::system::error_code errorCode, std::size_t length) {
-                                 if (errorCode) {
-                                     addOutput(string("Write Error: ") + errorCode.message() + "\n",
-                                               OutputType::ERRORMSG);
-                                     exitSession();
-                                     return;
-                                 }
 
-                                 addOutput(command, OutputType::COMMAND);
+    timer.expires_from_now(boost::posix_time::seconds(3));
+    timer.async_wait([this, self](boost::system::error_code errorCode) {
+        if (errorCode) {
+            addOutput(string("Timer Error: ") + errorCode.message() + "\n", OutputType::ERRORMSG);
+            exitSession();
+            return;
+        }
+        string command;
+        getline(scriptFile, command);
+        if (command[command.length() - 1] == '\r') {
+            command.erase(command.length() - 1);
+        }
+        command += "\n";
+        strcpy(data, command.c_str());
 
-                                 if (command == "exit\r\n" || command == "exit\n") {
-                                     socket.close();
-                                     scriptFile.close();
+        boost::asio::async_write(socket, boost::asio::buffer(data, strlen(data)),
+                                 [this, self, command](boost::system::error_code errorCode, std::size_t length) {
+                                     if (errorCode) {
+                                         addOutput(string("Write Error: ") + errorCode.message() + "\n",
+                                                   OutputType::ERRORMSG);
+                                         exitSession();
+                                         return;
+                                     }
 
-                                     exitSession();
-                                     return;
+                                     addOutput(command, OutputType::COMMAND);
 
-                                 } else {
-                                     doRead();
-                                 }
-                             });
+                                     if (command == "exit\r\n" || command == "exit\n") {
+                                         socket.close();
+                                         scriptFile.close();
+
+                                         exitSession();
+                                         return;
+
+                                     } else {
+                                         doRead();
+                                     }
+                                 });
+    });
 }
 
 

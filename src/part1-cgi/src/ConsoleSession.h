@@ -30,6 +30,7 @@ class ConsoleSession : public enable_shared_from_this<ConsoleSession> {
 
     tcp::socket socket;
     tcp::resolver resolver;
+    boost::asio::deadline_timer timer;
 
     Console* console;
 
