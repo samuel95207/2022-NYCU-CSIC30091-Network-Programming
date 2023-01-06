@@ -1,0 +1,8 @@
+   1 baozi
+   2 bin
+   3 ls.txt
+   4 nbpin
+   5 test.html
+   6 test1.txt
+   7 test2.txt
+   8 user_pipe
